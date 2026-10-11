@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Color
 
 // Brand
 val Primary = Color(0xFF9C6EFF)
-val PrimaryShadow = Color(0xFF7646E3)
+val PrimaryShadow = Color(0xFF8152ED)
 
 // Text on brand colors
 val OnPrimary = Color(0xFFFFFFFF)
