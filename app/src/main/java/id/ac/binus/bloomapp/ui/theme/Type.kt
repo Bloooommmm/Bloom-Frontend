@@ -9,7 +9,6 @@ import androidx.compose.ui.unit.sp
 import id.ac.binus.bloomapp.R
 
 // Set of Material typography styles to start with
-
 val AppFont = FontFamily(
     Font(R.font.lexend_regular, FontWeight.Normal),
     Font(R.font.lexend_medium, FontWeight.Medium),
