@@ -1,4 +1,4 @@
-package com.example.bloom.ui.theme
+package id.ac.binus.bloomapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
@@ -12,8 +12,8 @@ val Surface = Color(0xFFFFFFFF)
 val SurfaceVariant = Color(0xFFF1F1F7)
 
 // Brand Tints
-val CoralLight = Color(0xFFFFF3F1)
-val PurpleLight = Color(0xFFF2F0FC)
+val PrimaryLight = Color(0xFFFFF3F1)
+val SecondaryLight = Color(0xFFF2F0FC)
 
 // Text Colors
 val TextPrimary = Color(0xFF29243A)
