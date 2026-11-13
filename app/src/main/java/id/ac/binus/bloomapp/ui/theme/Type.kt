@@ -8,12 +8,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import id.ac.binus.bloomapp.R
 
-// Set of Material typography styles to start with
 val AppFont = FontFamily(
-    Font(R.font.lexend_regular, FontWeight.Normal),
-    Font(R.font.lexend_medium, FontWeight.Medium),
-    Font(R.font.lexend_semibold, FontWeight.SemiBold),
-    Font(R.font.lexend_bold, FontWeight.Bold)
+    Font(R.font.onest_regular, FontWeight.Normal),
+    Font(R.font.onest_medium, FontWeight.Medium),
+    Font(R.font.onest_semibold, FontWeight.SemiBold),
+    Font(R.font.onest_bold, FontWeight.Bold)
 )
 
 val AppTypography = Typography(
@@ -52,9 +51,14 @@ val AppTypography = Typography(
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp
     ),
+    labelMedium = TextStyle(
+        fontFamily = AppFont,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp
+    ),
     labelLarge = TextStyle(
         fontFamily = AppFont,
-        fontWeight = FontWeight.Bold,
-        fontSize = 14.sp
+        fontWeight = FontWeight.Medium,
+        fontSize = 12.sp
     )
 )

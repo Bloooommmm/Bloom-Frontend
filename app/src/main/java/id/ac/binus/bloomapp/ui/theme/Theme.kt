@@ -1,9 +1,8 @@
-package com.example.bloom.ui.theme
+package id.ac.binus.bloomapp.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import id.ac.binus.bloomapp.ui.theme.AppTypography
 
 private val BloomColorScheme = lightColorScheme(
     // Brand
@@ -31,7 +30,7 @@ private val BloomColorScheme = lightColorScheme(
 )
 
 @Composable
-fun BloomTheme(
+fun BloomAppTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
