@@ -66,7 +66,7 @@ fun CustomButton(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(54.dp)
+            .height(56.dp)
             .clip(CircleShape)
             .background(
                 if (enabled) shadowColor else Color(0xFFBDBDBD)
@@ -78,7 +78,7 @@ fun CustomButton(
             interactionSource = interactionSource,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(54.dp)
+                .height(56.dp)
                 .align(Alignment.TopCenter)
                 .offset(y = offset),
             shape = CircleShape,
