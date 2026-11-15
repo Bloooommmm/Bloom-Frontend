@@ -109,9 +109,8 @@ fun CycleDateSelector(
                         .getDisplayName(
                             TextStyle.SHORT,
                             Locale.ENGLISH
-                        )
-                        .uppercase(),
-                    fontSize = 9.sp,
+                        ),
+                    fontSize = 10.sp,
                     fontWeight = if (isToday) FontWeight.Bold else FontWeight.SemiBold,
                     color = if (isToday) Color.White else TextSecondary
                 )

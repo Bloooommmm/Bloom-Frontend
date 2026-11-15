@@ -18,6 +18,7 @@ import id.ac.binus.bloomapp.screens.auth.LoginScreen
 import id.ac.binus.bloomapp.screens.onboarding.OnboardingScreen
 import id.ac.binus.bloomapp.screens.today.TodayScreen
 import id.ac.binus.bloomapp.ui.components.BloomBottomNavigationBar
+import id.ac.binus.bloomapp.ui.screens.calendar.CalendarScreen
 import id.ac.binus.bloomapp.ui.theme.Surface
 
 private val mainRoutes = listOf(
@@ -89,7 +90,7 @@ fun AppNavigation() {
             }
 
             composable("calendar") {
-                PlaceholderScreen("Calendar")
+                CalendarScreen()
             }
 
             composable("lessons") {
