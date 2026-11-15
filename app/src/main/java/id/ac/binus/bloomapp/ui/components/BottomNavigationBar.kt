@@ -36,7 +36,7 @@ private val navItems = listOf(
         activeIcon = R.drawable.icon_calendar_active
     ),
     BottomNavItem(
-        label = "Lesson",
+        label = "Learn",
         icon = R.drawable.icon_learn,
         activeIcon = R.drawable.icon_learn_active
     ),
