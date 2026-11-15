@@ -78,9 +78,9 @@ fun LoginScreen(
             CustomButton(
                 text = "Continue with Google",
                 onClick = onGoogleSignInClick,
-                containerColor = Color(0xFFF8FAFF),
-                shadowColor = Color(0xFFDBE6EB),
-                contentColor = Color(0xFF53637B),
+                containerColor = Color(0xFFF9F9F9),
+                shadowColor = Color(0xFFD8D7D7),
+                contentColor = Color(0xFF53575B),
                 leadingIcon = {
                     Image(
                         painter = painterResource(R.drawable.icon_google),

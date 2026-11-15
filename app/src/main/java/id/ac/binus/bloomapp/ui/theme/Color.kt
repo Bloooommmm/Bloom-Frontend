@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Color
 
 // Brand Colors
 val Primary = Color(0xFFFE627A)
-val Secondary = Color(0xFF2BB8A0)
+val Secondary = Color(0xFF46C2AF)
 
 // Background & Surface
 val Background = Color(0xFFFFFFFF)
@@ -18,7 +18,7 @@ val SecondaryLight = Color(0xFFF0FAFC)
 
 // Text Colors
 val TextPrimary = Color(0xFF29243A)
-val TextSecondary = Color(0xFF777184)
+val TextSecondary = Color(0xFF84808D)
 
 // Border & Outline
 val Outline = Color(0xFFE5E3ED)
