@@ -37,6 +37,8 @@ class BloomApi(
 
     suspend fun finishPeriod(idToken: String, id: String, endDate: String): String = authenticatedJson("/api/tracking/periods/$id", idToken, "PATCH", "{\"endDate\":\"$endDate\"}")
 
+    suspend fun deletePeriod(idToken: String, id: String): String = authenticatedJson("/api/tracking/periods/$id", idToken, "DELETE")
+
     suspend fun recordMood(idToken: String, mood: String, loggedAt: String, note: String? = null): String = authenticatedJson("/api/tracking/moods", idToken, "PUT", "{\"mood\":\"${mood.replace("\\", "\\\\").replace("\"", "\\\"")}\",\"loggedAt\":\"$loggedAt\"${note?.let { ",\"note\":\"${it.replace("\\", "\\\\").replace("\"", "\\\"")}" } ?: ""}}")
 
     private suspend fun authenticatedGet(path: String, idToken: String): String = authenticatedJson(path, idToken, "GET")

@@ -5,10 +5,12 @@ import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.media.MediaPlayer
+import androidx.annotation.RawRes
 import androidx.compose.runtime.*
 import java.util.Locale
 
-internal class ArticleAudio(context: Context, text: String) {
+internal class ArticleAudio(context: Context, text: String, @RawRes audioRes: Int? = null) {
     var ready by mutableStateOf(false); private set
     var playing by mutableStateOf(false); private set
     var paused by mutableStateOf(false); private set
@@ -21,13 +23,19 @@ internal class ArticleAudio(context: Context, text: String) {
     private var baseOffset = 0
     private var request = 0
     private var closed = false
-    private val tts = TextToSpeech(context.applicationContext) { status ->
-        handler.post { initialized(status) }
+    private val mediaPlayer = audioRes?.let { MediaPlayer.create(context.applicationContext, it) }
+    private val tts = if (mediaPlayer == null) TextToSpeech(context.applicationContext) { status -> handler.post { initialized(status) } } else null
+
+    init {
+        if (mediaPlayer != null) {
+            ready = true
+            mediaPlayer.setOnCompletionListener { handler.post { playing = false; paused = false } }
+        }
     }
 
     private fun initialized(status: Int) {
         if (closed) return
-        if (status != TextToSpeech.SUCCESS || tts.setLanguage(Locale.ENGLISH) < 0) {
+        if (tts == null || status != TextToSpeech.SUCCESS || tts.setLanguage(Locale.ENGLISH) < 0) {
             error = "English audio is unavailable on this device."
             return
         }
@@ -56,24 +64,24 @@ internal class ArticleAudio(context: Context, text: String) {
     private fun speak() {
         baseOffset = offset
         request++
-        if (tts.speak(chunks[index].substring(offset), TextToSpeech.QUEUE_FLUSH, null, request.toString()) == TextToSpeech.ERROR) failed()
+        if (tts?.speak(chunks[index].substring(offset), TextToSpeech.QUEUE_FLUSH, null, request.toString()) == TextToSpeech.ERROR) failed()
     }
 
     fun play() {
         if (!ready || closed) return
         error = null; playing = true; paused = false
-        speak()
+        if (mediaPlayer != null) mediaPlayer.start() else speak()
     }
 
     fun pause() {
         if (!playing) return
         playing = false; paused = true; request++
-        tts.stop()
+        if (mediaPlayer != null) mediaPlayer.pause() else tts?.stop()
     }
 
     fun stop() {
         playing = false; paused = false; request++; index = 0; offset = 0
-        tts.stop()
+        if (mediaPlayer != null) { mediaPlayer.pause(); mediaPlayer.seekTo(0) } else tts?.stop()
     }
 
     private fun failed() {
@@ -84,7 +92,8 @@ internal class ArticleAudio(context: Context, text: String) {
     fun close() {
         closed = true
         stop()
-        tts.shutdown()
+        mediaPlayer?.release()
+        tts?.shutdown()
         handler.removeCallbacksAndMessages(null)
     }
 }

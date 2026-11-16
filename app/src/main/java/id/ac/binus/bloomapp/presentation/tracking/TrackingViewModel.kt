@@ -36,4 +36,10 @@ class TrackingViewModel(private val api: BloomApi = BloomApi()) : ViewModel() {
         try { api.finishPeriod(token(), id, date.toString()); _state.value = _state.value.copy(saving = false); refresh() }
         catch (_: Exception) { _state.value = _state.value.copy(saving = false, error = "Catatan gagal disimpan. Coba lagi.") }
     }
+
+    fun delete(id: String) = viewModelScope.launch {
+        _state.value = _state.value.copy(saving = true, error = null)
+        try { api.deletePeriod(token(), id); _state.value = _state.value.copy(saving = false); refresh() }
+        catch (_: Exception) { _state.value = _state.value.copy(saving = false, error = "Catatan gagal dihapus. Coba lagi.") }
+    }
 }

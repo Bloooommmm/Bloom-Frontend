@@ -38,6 +38,7 @@ fun CalendarScreen(tracking: TrackingViewModel, modifier: Modifier = Modifier) {
     LaunchedEffect(Unit) { tracking.refresh() }
     var month by remember { mutableStateOf(YearMonth.from(today)) }
     var selected by remember { mutableStateOf(today) }
+    var confirmDelete by remember { mutableStateOf<PeriodRecord?>(null) }
     val active = state.periods.firstOrNull { it.endDate == null }
     val selectedPeriod = state.periods.firstOrNull { it.includes(selected) }
     val start = month.atDay(1).minusDays((month.atDay(1).dayOfWeek.value - 1).toLong())
@@ -58,12 +59,15 @@ fun CalendarScreen(tracking: TrackingViewModel, modifier: Modifier = Modifier) {
                 Text(if (selectedPeriod != null) "Period logged" else "No period logged", color = TextSecondary)
                 val validDate = !selected.isAfter(today) && (active == null || !selected.isBefore(active.startDate))
                 CustomButton(text = if (active == null) "Log period start" else "Log period end", onClick = { if (active == null) tracking.start(selected) else tracking.finish(active.id, selected) }, enabled = !state.saving && validDate, modifier = Modifier.fillMaxWidth())
+                selectedPeriod?.let { period ->
+                    TextButton(onClick = { confirmDelete = period }, modifier = Modifier.align(Alignment.End), enabled = !state.saving) { Text("Delete this record", color = MaterialTheme.colorScheme.error) }
+                }
                 if (selected != today) TextButton({ selected = today; month = YearMonth.from(today) }, Modifier.align(Alignment.End)) { Text("Back to today", color = Primary) }
             }
         }
         Text("Period history", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
         if (state.periods.isEmpty()) Text("Your logged periods will appear here.", color = TextSecondary)
-        state.periods.sortedByDescending { it.startDate }.forEach { period ->
+        state.periods.sortedByDescending { it.startDate }.distinctBy { it.startDate }.forEach { period ->
             val end = period.endDate
             val duration = end?.let { ChronoUnit.DAYS.between(period.startDate, it).toInt() + 1 }
             Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -73,6 +77,15 @@ fun CalendarScreen(tracking: TrackingViewModel, modifier: Modifier = Modifier) {
             }
         }
         state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+    }
+    confirmDelete?.let { period ->
+        AlertDialog(
+            onDismissRequest = { confirmDelete = null },
+            title = { Text("Delete period record?") },
+            text = { Text("This removes the ${period.startDate} record from your history.") },
+            confirmButton = { TextButton(onClick = { tracking.delete(period.id); confirmDelete = null }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
+            dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text("Cancel") } },
+        )
     }
 }
 

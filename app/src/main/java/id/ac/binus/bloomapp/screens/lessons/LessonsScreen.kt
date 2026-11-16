@@ -10,8 +10,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowForward
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -64,7 +68,7 @@ private fun LessonCard(lesson: Lesson, onClick: () -> Unit) {
                     Spacer(Modifier.width(8.dp))
                     Text("${lesson.estimatedReadTime} min read", color = TextSecondary, style = MaterialTheme.typography.labelMedium)
                     Spacer(Modifier.weight(1f))
-                    Icon(Icons.Outlined.ArrowForward, contentDescription = "Read article", tint = Primary)
+                    Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = "Read article", tint = Primary)
                 }
                 Text(lesson.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.padding(top = 12.dp))
                 Text(articlePreview(lesson.content), maxLines = 3, color = TextSecondary, modifier = Modifier.padding(top = 6.dp))
@@ -77,7 +81,17 @@ private fun LessonCard(lesson: Lesson, onClick: () -> Unit) {
 internal fun LessonDetail(lesson: Lesson, onBack: () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val sections = remember(lesson.content) { parseSections(lesson.content) }
-    val audio = remember(lesson.id) { ArticleAudio(context, sections.joinToString("\n") { "${it.heading}. ${it.body}" }) }
+    val audio = remember(lesson.id) {
+        val resource = when {
+            lesson.title.contains("First Period", true) -> R.raw.article_first_period
+            lesson.title.contains("Fatigue", true) -> R.raw.article_fatigue
+            lesson.title.contains("Crave", true) -> R.raw.article_cravings
+            lesson.title.contains("Cramps", true) -> R.raw.article_cramps
+            lesson.title.contains("Mood", true) -> R.raw.article_mood
+            else -> null
+        }
+        ArticleAudio(context, sections.joinToString("\n") { "${it.heading}. ${it.body}" }, resource)
+    }
     val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
     DisposableEffect(audio, lifecycle) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
@@ -87,15 +101,20 @@ internal fun LessonDetail(lesson: Lesson, onBack: () -> Unit) {
         onDispose { lifecycle.removeObserver(observer); audio.close() }
     }
     Column(Modifier.fillMaxSize().background(Surface).statusBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp)) {
-        TextButton(onClick = onBack) { Text("←  Learn", color = Primary) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBack, modifier = Modifier.size(52.dp)) {
+                Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back to Learn", tint = Primary, modifier = Modifier.size(30.dp))
+            }
+            Text("Learn", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+        }
         Text(lesson.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.padding(top = 18.dp))
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("${lesson.estimatedReadTime} min read", color = TextSecondary)
             Spacer(Modifier.weight(1f))
-            TextButton(onClick = { if (audio.playing) audio.pause() else audio.play() }, enabled = audio.ready) {
-                Text(if (audio.playing) "Pause" else if (audio.paused) "Resume" else "Listen")
+            IconButton(onClick = { if (audio.playing) audio.pause() else audio.play() }, enabled = audio.ready, modifier = Modifier.size(52.dp)) {
+                Icon(if (audio.playing) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, contentDescription = if (audio.playing) "Pause audio" else if (audio.paused) "Resume audio" else "Listen to article", tint = Primary, modifier = Modifier.size(30.dp))
             }
-            if (audio.playing || audio.paused) TextButton(onClick = audio::stop) { Text("Stop") }
+            if (audio.playing || audio.paused) IconButton(onClick = audio::stop, modifier = Modifier.size(52.dp)) { Icon(Icons.Outlined.Stop, contentDescription = "Stop audio", tint = TextSecondary, modifier = Modifier.size(26.dp)) }
         }
         audio.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Spacer(Modifier.height(12.dp))
