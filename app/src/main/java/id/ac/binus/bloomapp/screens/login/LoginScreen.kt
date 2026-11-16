@@ -55,7 +55,7 @@ fun LoginScreen(
             FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener { authTask ->
                 if (!authTask.isSuccessful) {
                     signingIn = false
-                    loginError = "Login gagal. Coba lagi."
+                    loginError = "Sign-in failed. Try again."
                     return@addOnCompleteListener
                 }
 
@@ -75,7 +75,7 @@ fun LoginScreen(
             }
         }.onFailure {
             signingIn = false
-            loginError = "Login Google dibatalkan."
+            loginError = "Google sign-in was cancelled."
         }
     }
     Column(

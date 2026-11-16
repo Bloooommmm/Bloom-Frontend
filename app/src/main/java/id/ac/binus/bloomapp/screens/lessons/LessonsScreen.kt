@@ -42,7 +42,7 @@ fun LessonsScreen(viewModel: LessonsViewModel = viewModel()) {
         return
     }
     Column(Modifier.fillMaxSize().background(Surface).statusBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("Learn", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), color = TextPrimary)
+        Text("Learn", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), color = Primary)
         Text("Simple answers for every phase of your cycle", color = TextSecondary)
         when {
             state.isLoading -> CircularProgressIndicator(color = Primary)
@@ -89,24 +89,26 @@ private fun LessonCard(lesson: Lesson, onClick: () -> Unit) {
 @Composable
 internal fun LessonDetail(lesson: Lesson, onBack: () -> Unit) {
     val sections = remember(lesson.content) { parseSections(lesson.content) }
-    Column(Modifier.fillMaxSize().background(Surface).statusBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(Modifier.fillMaxSize().background(Surface).statusBarsPadding()) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack, modifier = Modifier.size(52.dp)) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back to Learn", tint = Primary, modifier = Modifier.size(30.dp))
             }
-            Text("Learn", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Text("Learn", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Primary)
         }
-        Text(lesson.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.padding(top = 18.dp))
-        Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("${lesson.estimatedReadTime} min read", color = TextSecondary)
+        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp)) {
+            Text(lesson.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("${lesson.estimatedReadTime} min read", color = TextSecondary)
+            }
+            Spacer(Modifier.height(12.dp))
+            sections.forEachIndexed { index, section ->
+                Text(section.heading, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.padding(top = if (index == 0) 0.dp else 24.dp))
+                Text(section.body, style = MaterialTheme.typography.bodyLarge, color = TextPrimary, modifier = Modifier.padding(top = 8.dp))
+                lessonIllustrations(lesson).getOrNull(index)?.let { resource -> Image(painterResource(resource), "Illustration for ${section.heading}", Modifier.fillMaxWidth().height(170.dp).padding(top = 12.dp), contentScale = ContentScale.Fit) }
+            }
+            Spacer(Modifier.height(28.dp))
         }
-        Spacer(Modifier.height(12.dp))
-        sections.forEachIndexed { index, section ->
-            Text(section.heading, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.padding(top = if (index == 0) 0.dp else 24.dp))
-            Text(section.body, style = MaterialTheme.typography.bodyLarge, color = TextPrimary, modifier = Modifier.padding(top = 8.dp))
-            lessonIllustrations(lesson).getOrNull(index)?.let { resource -> Image(painterResource(resource), "Illustration for ${section.heading}", Modifier.fillMaxWidth().height(170.dp).padding(top = 12.dp), contentScale = ContentScale.Fit) }
-        }
-        Spacer(Modifier.height(28.dp))
     }
 }
 

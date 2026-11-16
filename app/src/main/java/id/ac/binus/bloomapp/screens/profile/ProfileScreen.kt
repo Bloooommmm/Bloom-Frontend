@@ -43,7 +43,7 @@ import id.ac.binus.bloomapp.ui.components.CustomButton
 fun ProfileScreen(onSignedOut: () -> Unit) {
     val user = remember { FirebaseAuth.getInstance().currentUser }
     val name = user?.displayName?.takeIf { it.isNotBlank() } ?: "Bloom friend"
-    val email = user?.email ?: "Belum ada email"
+    val email = user?.email ?: "No email available"
     val initials = name.trim().split(" ").take(2).mapNotNull { it.firstOrNull() }.joinToString("").uppercase()
 
     Column(

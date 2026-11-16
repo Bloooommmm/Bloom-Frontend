@@ -19,7 +19,7 @@ class TrackingViewModel(private val api: BloomApi = BloomApi()) : ViewModel() {
     val state = _state.asStateFlow()
     private var profileSynced = false
 
-    private suspend fun token(): String = FirebaseAuth.getInstance().currentUser?.getIdToken(false)?.await()?.token ?: error("Silakan login kembali")
+    private suspend fun token(): String = FirebaseAuth.getInstance().currentUser?.getIdToken(false)?.await()?.token ?: error("Please sign in again")
 
     private suspend fun <T> retryRequest(block: suspend () -> T): T {
         var last: Throwable? = null
@@ -42,24 +42,24 @@ class TrackingViewModel(private val api: BloomApi = BloomApi()) : ViewModel() {
             }
             _state.value = _state.value.copy(periods = retryRequest { api.getPeriods(authToken) }, loading = false)
         }
-        catch (_: Exception) { _state.value = _state.value.copy(loading = false, error = "Data haid gagal dimuat. Coba lagi.") }
+        catch (_: Exception) { _state.value = _state.value.copy(loading = false, error = "Cycle data could not load. Try again.") }
     }
 
     fun start(date: LocalDate) = viewModelScope.launch {
         _state.value = _state.value.copy(saving = true, error = null)
         try { retryRequest { api.recordPeriod(token(), date.toString()) }; _state.value = _state.value.copy(saving = false); refresh() }
-        catch (_: Exception) { _state.value = _state.value.copy(saving = false, error = "Catatan gagal disimpan. Coba lagi.") }
+        catch (_: Exception) { _state.value = _state.value.copy(saving = false, error = "Period record could not be saved. Try again.") }
     }
 
     fun finish(id: String, date: LocalDate) = viewModelScope.launch {
         _state.value = _state.value.copy(saving = true, error = null)
         try { retryRequest { api.finishPeriod(token(), id, date.toString()) }; _state.value = _state.value.copy(saving = false); refresh() }
-        catch (_: Exception) { _state.value = _state.value.copy(saving = false, error = "Catatan gagal disimpan. Coba lagi.") }
+        catch (_: Exception) { _state.value = _state.value.copy(saving = false, error = "Period record could not be saved. Try again.") }
     }
 
     fun delete(id: String) = viewModelScope.launch {
         _state.value = _state.value.copy(saving = true, error = null)
         try { retryRequest { api.deletePeriod(token(), id) }; _state.value = _state.value.copy(saving = false); refresh() }
-        catch (_: Exception) { _state.value = _state.value.copy(saving = false, error = "Catatan gagal dihapus. Coba lagi.") }
+        catch (_: Exception) { _state.value = _state.value.copy(saving = false, error = "Period record could not be deleted. Try again.") }
     }
 }

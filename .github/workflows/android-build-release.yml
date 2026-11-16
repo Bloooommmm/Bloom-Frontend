@@ -1,0 +1,171 @@
+name: Android Build and Release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Install Android SDK packages
+        shell: bash
+        run: sdkmanager "platform-tools" "platforms;android-37"
+      - name: Restore Firebase Android config
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          test -n "$GOOGLE_SERVICES_JSON" || { echo "::error::Missing GOOGLE_SERVICES_JSON secret"; exit 1; }
+          printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
+      - name: Grant Gradle execute permission
+        run: chmod +x ./gradlew
+      - name: Validate app version and release tag
+        shell: bash
+        run: |
+          version="$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts)"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::Invalid app version"; exit 1; }
+          if [[ "$GITHUB_REF" == refs/tags/* && "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "::error::Tag must match versionName: v$version"
+            exit 1
+          fi
+      - name: Run tests
+        run: ./gradlew --no-daemon test
+      - name: Build debug APK
+        run: ./gradlew --no-daemon :app:assembleDebug
+      - name: Name debug APK
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            apk_name="Bloom-${GITHUB_REF_NAME}-debug.apk"
+          else
+            apk_name="Bloom-debug-${GITHUB_SHA}.apk"
+          fi
+          cp app/build/outputs/apk/debug/app-debug.apk "app/build/outputs/apk/debug/${apk_name}"
+          echo "APK_PATH=app/build/outputs/apk/debug/${apk_name}" >> "$GITHUB_ENV"
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bloom-debug-${{ github.sha }}
+          path: ${{ env.APK_PATH }}
+          if-no-files-found: error
+          retention-days: 30
+
+  build-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    name: Build signed release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_UPLOAD_CERT_SHA1: ${{ secrets.ANDROID_UPLOAD_CERT_SHA1 }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Install Android SDK packages
+        shell: bash
+        run: sdkmanager "platform-tools" "platforms;android-37"
+      - name: Restore Firebase Android config
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          test -n "$GOOGLE_SERVICES_JSON" || { echo "::error::Missing GOOGLE_SERVICES_JSON secret"; exit 1; }
+          printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
+      - name: Grant Gradle execute permission
+        run: chmod +x ./gradlew
+      - name: Validate signing certificate and write SHA-1
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD ANDROID_UPLOAD_CERT_SHA1; do
+            [[ -n "${!name:-}" ]] || { echo "::error::Missing required GitHub Actions secret: $name"; exit 1; }
+          done
+          keystore="$RUNNER_TEMP/bloom-release.keystore"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore"
+          actual_sha1="$(keytool -list -v -keystore "$keystore" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" | awk -F': ' '/SHA1:/{print $2; exit}')"
+          normalize() { printf '%s' "$1" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]'; }
+          [[ "$(normalize "$actual_sha1")" == "$(normalize "$ANDROID_UPLOAD_CERT_SHA1")" ]] || { echo "::error::Signing SHA-1 mismatch"; exit 1; }
+          printf '%s\n' "$actual_sha1" > android-sha1.txt
+          echo "ANDROID_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
+      - name: Build signed release APK
+        run: ./gradlew --no-daemon :app:assembleRelease
+      - name: Stage release files
+        shell: bash
+        run: |
+          mkdir -p release-files
+          version="$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts)"
+          cp app/build/outputs/apk/release/app-release.apk "release-files/Bloom-v${version}.apk"
+          cp android-sha1.txt release-files/android-sha1.txt
+      - name: Upload signed release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bloom-release-${{ github.sha }}
+          path: release-files
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove temporary signing inputs
+        if: always()
+        run: rm -f "$RUNNER_TEMP/bloom-release.keystore" android-sha1.txt
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build, build-release]
+    name: Publish APK artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download debug artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Bloom-debug-${{ github.sha }}
+          path: release/debug
+      - name: Download release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Bloom-release-${{ github.sha }}
+          path: release/release
+      - name: Publish versioned GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Bloom ${{ github.ref_name }}
+          prerelease: false
+          make_latest: true
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          files: |
+            release/debug/*.apk
+            release/release/*.apk
+            release/release/android-sha1.txt

@@ -129,13 +129,13 @@ fun TodayScreen(tracking: TrackingViewModel) {
             )
 
             Text(
-                text = if (selectedPeriod != null) "Period tercatat ${selectedPeriod.startDate}" else "Belum ada catatan period untuk tanggal ini",
+                text = if (selectedPeriod != null) "Period logged on ${selectedPeriod.startDate}" else "No period logged for this date",
                 color = TextSecondary,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
             CustomButton(
-                text = if (activePeriod == null) "Catat mulai haid" else "Catat selesai haid",
+                text = if (activePeriod == null) "Log period start" else "Log period end",
                 onClick = { if (activePeriod == null) tracking.start(selectedDate) else tracking.finish(activePeriod.id, selectedDate) },
                 enabled = !trackingState.saving,
                 modifier = Modifier.fillMaxWidth(),

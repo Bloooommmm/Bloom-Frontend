@@ -33,7 +33,7 @@ class LessonsViewModel(
                 .onFailure {
                     _uiState.value = LessonsUiState(
                         isLoading = false,
-                        error = "Materi belum bisa dimuat. Coba lagi.",
+                        error = "Lessons could not load. Try again.",
                     )
                 }
         }
