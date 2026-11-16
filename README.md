@@ -41,7 +41,7 @@ Firebase configuration is supplied locally through `app/google-services.json` an
 
 ## Version
 
-Current app version: `1.0.0` (`versionCode` 2).
+Current app version: `1.0.1` (`versionCode` 3).
 
 ## APK pipeline
 
