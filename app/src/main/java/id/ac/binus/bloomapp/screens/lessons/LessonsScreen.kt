@@ -48,7 +48,15 @@ fun LessonsScreen(viewModel: LessonsViewModel = viewModel()) {
     }
 }
 @Composable private fun LessonCard(lesson: Lesson,onClick:()->Unit){ Card(Modifier.fillMaxWidth().clickable(onClick=onClick),RoundedCornerShape(20.dp),colors=CardDefaults.cardColors(Color.White),elevation=CardDefaults.cardElevation(0.dp),border=BorderStroke(1.dp,Outline)){ Column(Modifier.padding(16.dp)){ Row(verticalAlignment=Alignment.CenterVertically){Icon(imageVector = Icons.Outlined.MenuBook, contentDescription = null, tint = Primary, modifier = Modifier.size(20.dp));Text("  ${lesson.estimatedReadTime} min read",color=TextSecondary,style=MaterialTheme.typography.labelMedium);Spacer(Modifier.weight(1f));Icon(imageVector = Icons.Outlined.ArrowForward, contentDescription = "Read article", tint = Primary)}; Text(lesson.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=TextPrimary,modifier=Modifier.padding(top=10.dp));Text(lesson.content,maxLines=3,color=TextSecondary,modifier=Modifier.padding(top=6.dp)) } } }
-@Composable private fun LessonDetail(lesson:Lesson,onBack:()->Unit){ Column(Modifier.fillMaxSize().background(Surface).padding(20.dp)){Text("←  Learn",color=Primary,modifier=Modifier.clickable(onClick=onBack));Image(painterResource(R.drawable.learn_mascot_hero),"Bloom mascot illustration",Modifier.fillMaxWidth().height(190.dp).padding(vertical=12.dp),contentScale=ContentScale.Fit);Text(lesson.title,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,color=TextPrimary);Text("${lesson.estimatedReadTime} min read",color=TextSecondary,modifier=Modifier.padding(top=6.dp));Text(lesson.content,style=MaterialTheme.typography.bodyLarge,color=TextPrimary,modifier=Modifier.padding(top=18.dp))} }
+@Composable private fun LessonDetail(lesson:Lesson,onBack:()->Unit){ Column(Modifier.fillMaxSize().background(Surface).padding(20.dp)){Text("←  Learn",color=Primary,modifier=Modifier.clickable(onClick=onBack));Image(painterResource(lessonIllustration(lesson)),"Bloom mascot illustration",Modifier.fillMaxWidth().height(190.dp).padding(vertical=12.dp),contentScale=ContentScale.Fit);Text(lesson.title,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,color=TextPrimary);Text("${lesson.estimatedReadTime} min read",color=TextSecondary,modifier=Modifier.padding(top=6.dp));Text(lesson.content,style=MaterialTheme.typography.bodyLarge,color=TextPrimary,modifier=Modifier.padding(top=18.dp))} }
+
+private fun lessonIllustration(lesson: Lesson): Int = when {
+    lesson.title.contains("Mood", ignoreCase = true) -> R.drawable.learn_mood
+    lesson.title.contains("Cramps", ignoreCase = true) -> R.drawable.learn_cramps
+    lesson.title.contains("Crave", ignoreCase = true) -> R.drawable.learn_cravings
+    lesson.title.contains("Fatigue", ignoreCase = true) -> R.drawable.learn_fatigue
+    else -> R.drawable.learn_mascot_hero
+}
 
 
 
