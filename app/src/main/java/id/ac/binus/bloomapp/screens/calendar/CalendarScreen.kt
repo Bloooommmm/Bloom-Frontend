@@ -56,7 +56,8 @@ fun CalendarScreen(tracking: TrackingViewModel, modifier: Modifier = Modifier) {
             Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(selected.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.ENGLISH)), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
                 Text(if (selectedPeriod != null) "Period logged" else "No period logged", color = TextSecondary)
-                CustomButton(text = if (active == null) "Log period start" else "Log period end", onClick = { if (active == null) tracking.start(selected) else tracking.finish(active.id, selected) }, enabled = !state.saving, modifier = Modifier.fillMaxWidth())
+                val validDate = !selected.isAfter(today) && (active == null || !selected.isBefore(active.startDate))
+                CustomButton(text = if (active == null) "Log period start" else "Log period end", onClick = { if (active == null) tracking.start(selected) else tracking.finish(active.id, selected) }, enabled = !state.saving && validDate, modifier = Modifier.fillMaxWidth())
                 if (selected != today) TextButton({ selected = today; month = YearMonth.from(today) }, Modifier.align(Alignment.End)) { Text("Back to today", color = Primary) }
             }
         }
