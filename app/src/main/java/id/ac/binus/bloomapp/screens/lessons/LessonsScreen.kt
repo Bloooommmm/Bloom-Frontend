@@ -7,9 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowForward
@@ -51,7 +48,7 @@ fun LessonsScreen(viewModel: LessonsViewModel = viewModel()) {
 @Composable private fun LessonCard(lesson: Lesson,onClick:()->Unit){ Card(Modifier.fillMaxWidth().clickable(onClick=onClick).shadow(6.dp, RoundedCornerShape(20.dp), clip=false),RoundedCornerShape(20.dp),colors=CardDefaults.cardColors(Color.White),elevation=CardDefaults.cardElevation(0.dp),border=BorderStroke(1.dp,Outline)){ Column(Modifier.padding(16.dp)){ Row(verticalAlignment=Alignment.CenterVertically){Icon(imageVector = Icons.Outlined.MenuBook, contentDescription = null, tint = Primary, modifier = Modifier.size(20.dp));Text("  ${lesson.estimatedReadTime} min read",color=TextSecondary,style=MaterialTheme.typography.labelMedium);Spacer(Modifier.weight(1f));Icon(imageVector = Icons.Outlined.ArrowForward, contentDescription = "Read article", tint = Primary)}; Text(lesson.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=TextPrimary,modifier=Modifier.padding(top=10.dp));Text(lesson.content,maxLines=3,color=TextSecondary,modifier=Modifier.padding(top=6.dp)) } } }
 @Composable private fun LessonDetail(lesson:Lesson,onBack:()->Unit){
     val paragraphs = remember(lesson.content) { lesson.content.split(Regex("\\n+|(?<=[.!?])\\s+(?=[A-Z])")).filter { it.isNotBlank() } }
-    var speaking by remember { mutableStateOf(false) }
+    var audioState by remember { mutableIntStateOf(0) } // 0 idle, 1 playing, 2 paused
     val context = androidx.compose.ui.platform.LocalContext.current
     val tts = remember { TextToSpeech(context) { } }
     DisposableEffect(Unit) { onDispose { tts.stop(); tts.shutdown() } }
@@ -63,9 +60,10 @@ fun LessonsScreen(viewModel: LessonsViewModel = viewModel()) {
                 Row(Modifier.fillMaxWidth().padding(top=6.dp), verticalAlignment=Alignment.CenterVertically) {
                     Text("${lesson.estimatedReadTime} min read", color=TextSecondary)
                     Spacer(Modifier.weight(1f))
-                    Text(if (speaking) "Stop audio" else "Listen", color=Primary, fontWeight=FontWeight.Bold, modifier=Modifier.clickable {
-                        if (speaking) { tts.stop(); speaking = false } else { tts.language = Locale("en"); tts.speak(lesson.content, TextToSpeech.QUEUE_FLUSH, null, "bloom-${lesson.id}"); speaking = true }
-                    })
+                    if (audioState == 0) TextButton(onClick = { tts.language = Locale.ENGLISH; tts.speak(lesson.content, TextToSpeech.QUEUE_FLUSH, null, "bloom-${lesson.id}"); audioState = 1 }) { Text("Play") }
+                    else if (audioState == 1) TextButton(onClick = { tts.stop(); audioState = 2 }) { Text("Pause") }
+                    else TextButton(onClick = { tts.speak(lesson.content, TextToSpeech.QUEUE_FLUSH, null, "bloom-resume-${lesson.id}"); audioState = 1 }) { Text("Resume") }
+                    TextButton(onClick = { tts.stop(); audioState = 0 }) { Text("Stop") }
                 }
             paragraphs.forEachIndexed { index, paragraph ->
                 if (index > 0 && index % 2 == 0) {
@@ -79,19 +77,20 @@ fun LessonsScreen(viewModel: LessonsViewModel = viewModel()) {
 }
 
 private fun lessonIllustration(lesson: Lesson): Int = when {
-    lesson.title.contains("Mood", ignoreCase = true) -> R.drawable.learn_mood
-    lesson.title.contains("Cramps", ignoreCase = true) -> R.drawable.learn_cramps
-    lesson.title.contains("Crave", ignoreCase = true) -> R.drawable.learn_cravings
-    lesson.title.contains("Fatigue", ignoreCase = true) -> R.drawable.learn_fatigue
+    lesson.title.contains("Mood", ignoreCase = true) -> R.drawable.article_mood_1
+    lesson.title.contains("Cramps", ignoreCase = true) -> R.drawable.article_cramps_1
+    lesson.title.contains("Crave", ignoreCase = true) -> R.drawable.article_cravings_1
+    lesson.title.contains("Fatigue", ignoreCase = true) -> R.drawable.article_fatigue_1
+    lesson.title.contains("First Period", ignoreCase = true) -> R.drawable.article_first_period_1
     else -> R.drawable.learn_mascot_hero
 }
 
 private fun lessonIllustrations(lesson: Lesson): List<Int> = when {
-    lesson.title.contains("Mood", ignoreCase = true) -> listOf(R.drawable.learn_mood, R.drawable.learn_phases, R.drawable.learn_selfcare)
-    lesson.title.contains("Cramps", ignoreCase = true) -> listOf(R.drawable.learn_cramps, R.drawable.learn_selfcare, R.drawable.learn_phases)
-    lesson.title.contains("Crave", ignoreCase = true) -> listOf(R.drawable.learn_cravings, R.drawable.learn_selfcare, R.drawable.learn_phases)
-    lesson.title.contains("Fatigue", ignoreCase = true) -> listOf(R.drawable.learn_fatigue, R.drawable.learn_selfcare, R.drawable.learn_phases)
-    lesson.title.contains("First Period", ignoreCase = true) -> listOf(R.drawable.learn_period_kit, R.drawable.learn_phases, R.drawable.learn_selfcare)
+    lesson.title.contains("Mood", ignoreCase = true) -> listOf(R.drawable.article_mood_1, R.drawable.article_mood_2, R.drawable.article_mood_3, R.drawable.article_mood_4)
+    lesson.title.contains("Cramps", ignoreCase = true) -> listOf(R.drawable.article_cramps_1, R.drawable.article_cramps_2, R.drawable.article_cramps_3, R.drawable.article_cramps_4)
+    lesson.title.contains("Crave", ignoreCase = true) -> listOf(R.drawable.article_cravings_1, R.drawable.article_cravings_2, R.drawable.article_cravings_3, R.drawable.article_cravings_4)
+    lesson.title.contains("Fatigue", ignoreCase = true) -> listOf(R.drawable.article_fatigue_1, R.drawable.article_fatigue_2, R.drawable.article_fatigue_3, R.drawable.article_fatigue_4)
+    lesson.title.contains("First Period", ignoreCase = true) -> listOf(R.drawable.article_first_period_1, R.drawable.article_first_period_2, R.drawable.article_first_period_3, R.drawable.article_first_period_4)
     else -> listOf(R.drawable.learn_mascot_hero, R.drawable.learn_phases, R.drawable.learn_selfcare)
 }
 
