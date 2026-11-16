@@ -1,9 +1,8 @@
 package id.ac.binus.bloomapp.screens.lessons
 
-import android.speech.tts.TextToSpeech
-import android.speech.tts.UtteranceProgressListener
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,9 +27,8 @@ import id.ac.binus.bloomapp.R
 import id.ac.binus.bloomapp.data.network.Lesson
 import id.ac.binus.bloomapp.presentation.lessons.LessonsViewModel
 import id.ac.binus.bloomapp.ui.theme.*
-import java.util.Locale
 
-private data class ArticleSection(val heading: String, val body: String)
+internal data class ArticleSection(val heading: String, val body: String)
 
 @Composable
 fun LessonsScreen(viewModel: LessonsViewModel = viewModel()) {
@@ -41,12 +39,15 @@ fun LessonsScreen(viewModel: LessonsViewModel = viewModel()) {
         LessonDetail(selected!!, onBack = { selected = null })
         return
     }
-    Column(Modifier.fillMaxSize().background(Surface).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(Modifier.fillMaxSize().background(Surface).statusBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Learn", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), color = TextPrimary)
         Text("Simple answers for every phase of your cycle", color = TextSecondary)
         when {
             state.isLoading -> CircularProgressIndicator(color = Primary)
-            state.error != null -> Text(state.error!!, color = MaterialTheme.colorScheme.error)
+            state.error != null -> {
+                Text(state.error!!, color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = viewModel::loadLessons) { Text("Try again") }
+            }
             else -> state.lessons.forEach { lesson -> LessonCard(lesson) { selected = lesson } }
         }
     }
@@ -56,7 +57,7 @@ fun LessonsScreen(viewModel: LessonsViewModel = viewModel()) {
 private fun LessonCard(lesson: Lesson, onClick: () -> Unit) {
     val shape = RoundedCornerShape(20.dp)
     Box(Modifier.fillMaxWidth().heightIn(min = 150.dp).background(Color(0xFFDC4862), shape)) {
-        Surface(Modifier.fillMaxWidth().offset(y = (-4).dp).clickable(onClick = onClick), shape = shape, color = Color.White) {
+        Surface(Modifier.fillMaxWidth().offset(y = (-4).dp).clickable(onClick = onClick), shape = shape, color = Color.White, border = BorderStroke(1.dp, Primary)) {
             Column(Modifier.padding(18.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.MenuBook, contentDescription = null, tint = Primary, modifier = Modifier.size(20.dp))
@@ -73,36 +74,30 @@ private fun LessonCard(lesson: Lesson, onClick: () -> Unit) {
 }
 
 @Composable
-private fun LessonDetail(lesson: Lesson, onBack: () -> Unit) {
+internal fun LessonDetail(lesson: Lesson, onBack: () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val sections = remember(lesson.content) { parseSections(lesson.content) }
-    val chunks = remember(sections) { sections.map { "${it.heading}. ${it.body}" } }
-    var audioState by remember { mutableIntStateOf(0) }
-    var currentChunk by remember { mutableIntStateOf(0) }
-    val tts = remember { TextToSpeech(context) { } }
-    DisposableEffect(tts) {
-        tts.language = Locale.ENGLISH
-        tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(utteranceId: String) {}
-            override fun onDone(utteranceId: String) {
-                val next = utteranceId.removePrefix("bloom-").toIntOrNull()?.plus(1) ?: chunks.size
-                if (next < chunks.size) { currentChunk = next; tts.speak(chunks[next], TextToSpeech.QUEUE_FLUSH, null, "bloom-$next") } else audioState = 0
-            }
-            override fun onError(utteranceId: String) { audioState = 0 }
-        })
-        onDispose { tts.stop(); tts.shutdown() }
+    val audio = remember(lesson.id) { ArticleAudio(context, sections.joinToString("\n") { "${it.heading}. ${it.body}" }) }
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(audio, lifecycle) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) audio.pause()
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer); audio.close() }
     }
-    Column(Modifier.fillMaxSize().background(Surface).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp)) {
-        Text("←  Learn", color = Primary, modifier = Modifier.clickable(onClick = onBack))
+    Column(Modifier.fillMaxSize().background(Surface).statusBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp)) {
+        TextButton(onClick = onBack) { Text("←  Learn", color = Primary) }
         Text(lesson.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.padding(top = 18.dp))
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("${lesson.estimatedReadTime} min read", color = TextSecondary)
             Spacer(Modifier.weight(1f))
-            TextButton(onClick = {
-                if (audioState == 1) { tts.stop(); audioState = 2 } else { if (audioState == 0) currentChunk = 0; tts.speak(chunks.getOrElse(currentChunk) { chunks.firstOrNull().orEmpty() }, TextToSpeech.QUEUE_FLUSH, null, "bloom-$currentChunk"); audioState = 1 }
-            }) { Text(if (audioState == 1) "Pause" else if (audioState == 2) "Resume" else "Listen") }
-            if (audioState != 0) TextButton(onClick = { tts.stop(); currentChunk = 0; audioState = 0 }) { Text("Stop") }
+            TextButton(onClick = { if (audio.playing) audio.pause() else audio.play() }, enabled = audio.ready) {
+                Text(if (audio.playing) "Pause" else if (audio.paused) "Resume" else "Listen")
+            }
+            if (audio.playing || audio.paused) TextButton(onClick = audio::stop) { Text("Stop") }
         }
+        audio.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Spacer(Modifier.height(12.dp))
         sections.forEachIndexed { index, section ->
             Text(section.heading, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.padding(top = if (index == 0) 0.dp else 24.dp))
@@ -115,7 +110,7 @@ private fun LessonDetail(lesson: Lesson, onBack: () -> Unit) {
 
 private fun articlePreview(content: String): String = content.substringAfter("\n\n", content).replace(Regex("##\\s*"), "").take(180)
 
-private fun parseSections(content: String): List<ArticleSection> {
+internal fun parseSections(content: String): List<ArticleSection> {
     val matches = content.split(Regex("(?m)^##\\s+")).drop(1).mapNotNull { block ->
         val lines = block.trim().split(Regex("\\n+"), limit = 2)
         lines.firstOrNull()?.trim()?.takeIf { it.isNotEmpty() }?.let { ArticleSection(it, lines.getOrElse(1) { "" }.trim()) }
@@ -123,7 +118,7 @@ private fun parseSections(content: String): List<ArticleSection> {
     return if (matches.isNotEmpty()) matches else listOf(ArticleSection("A gentle guide", content.trim()))
 }
 
-private fun lessonIllustrations(lesson: Lesson): List<Int> = when {
+internal fun lessonIllustrations(lesson: Lesson): List<Int> = when {
     lesson.title.contains("Mood", true) -> listOf(R.drawable.article_mood_1, R.drawable.article_mood_2, R.drawable.article_mood_3, R.drawable.article_mood_4)
     lesson.title.contains("Cramps", true) -> listOf(R.drawable.article_cramps_1, R.drawable.article_cramps_2, R.drawable.article_cramps_3, R.drawable.article_cramps_4)
     lesson.title.contains("Crave", true) -> listOf(R.drawable.article_cravings_1, R.drawable.article_cravings_2, R.drawable.article_cravings_3, R.drawable.article_cravings_4)
