@@ -1,7 +1,6 @@
 package id.ac.binus.bloomapp.ui.screens.calendar
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,10 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import id.ac.binus.bloomapp.data.network.PeriodRecord
-import id.ac.binus.bloomapp.R
 import id.ac.binus.bloomapp.presentation.tracking.TrackingViewModel
 import id.ac.binus.bloomapp.ui.components.CustomButton
 import id.ac.binus.bloomapp.ui.theme.*
@@ -47,14 +44,7 @@ fun CalendarScreen(tracking: TrackingViewModel, modifier: Modifier = Modifier) {
     val start = month.atDay(1).minusDays((month.atDay(1).dayOfWeek.value - 1).toLong())
     val dates = (0..41).map { start.plusDays(it.toLong()) }
     Column(modifier.fillMaxSize().background(Background).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(22.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("Calendar", Modifier.weight(1f), style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), color = TextPrimary)
-            Image(
-                painter = painterResource(R.drawable.bloom_mascot_calendar),
-                contentDescription = "Bloom calendar mascot",
-                modifier = Modifier.size(62.dp)
-            )
-        }
+        Text("Calendar", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), color = TextPrimary)
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             IconButton({ month = month.minusMonths(1) }) { Icon(Icons.Outlined.ChevronLeft, "Previous month", tint = TextPrimary) }
             Text("${month.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)} ${month.year}", Modifier.weight(1f), textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
