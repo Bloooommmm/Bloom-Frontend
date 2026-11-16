@@ -25,6 +25,9 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+import id.ac.binus.bloomapp.presentation.tracking.TrackingViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.material3.Button
 
 private enum class CalendarPhase {
     MENSTRUATION,
@@ -35,9 +38,13 @@ private enum class CalendarPhase {
 
 @Composable
 fun CalendarScreen(
+    tracking: TrackingViewModel,
     modifier: Modifier = Modifier
 ) {
     val today = remember { LocalDate.now() }
+    val trackingState by tracking.state.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { tracking.refresh() }
+    val activePeriod = trackingState.periods.firstOrNull { it.endDate == null }
 
     var currentMonth by remember {
         mutableStateOf(YearMonth.from(today))
@@ -46,6 +53,7 @@ fun CalendarScreen(
     var selectedDate by remember {
         mutableStateOf(today)
     }
+    val selectedPeriod = trackingState.periods.firstOrNull { it.includes(selectedDate) }
 
     val dateFormatter = DateTimeFormatter.ofPattern(
         "MMMM d, yyyy",
@@ -271,6 +279,16 @@ fun CalendarScreen(
                 color = getCalendarPhaseDarkColor(selectedPhase),
                 fontWeight = FontWeight.SemiBold
             )
+            Text(
+                text = if (selectedPeriod != null) "Period tercatat" else "Tidak ada catatan period",
+                color = getCalendarPhaseDarkColor(selectedPhase),
+                fontWeight = FontWeight.SemiBold,
+            )
+            Button(
+                onClick = { if (activePeriod == null) tracking.start(selectedDate) else tracking.finish(activePeriod.id, selectedDate) },
+                enabled = !trackingState.saving,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(if (activePeriod == null) "Catat mulai period" else "Catat selesai period") }
         }
     }
 }

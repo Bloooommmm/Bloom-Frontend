@@ -21,6 +21,8 @@ import id.ac.binus.bloomapp.screens.lessons.LessonsScreen
 import id.ac.binus.bloomapp.ui.components.BloomBottomNavigationBar
 import id.ac.binus.bloomapp.ui.screens.calendar.CalendarScreen
 import id.ac.binus.bloomapp.ui.theme.Surface
+import id.ac.binus.bloomapp.presentation.tracking.TrackingViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 private val mainRoutes = listOf(
     "today",
@@ -33,6 +35,7 @@ private val mainRoutes = listOf(
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val tracking: TrackingViewModel = viewModel()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -87,11 +90,11 @@ fun AppNavigation() {
             }
 
             composable("today") {
-                TodayScreen()
+                TodayScreen(tracking)
             }
 
             composable("calendar") {
-                CalendarScreen()
+                CalendarScreen(tracking = tracking)
             }
 
             composable("lessons") {

@@ -4,8 +4,10 @@ import id.ac.binus.bloomapp.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import java.time.LocalDate
 
 data class Lesson(
     val id: String,
@@ -14,14 +16,26 @@ data class Lesson(
     val estimatedReadTime: Int,
 )
 
+data class PeriodRecord(val id: String, val startDate: LocalDate, val endDate: LocalDate?) {
+    fun includes(date: LocalDate): Boolean = !date.isBefore(startDate) && !date.isAfter(endDate ?: LocalDate.now())
+}
+
 class BloomApi(
     private val baseUrl: String = BuildConfig.BLOOM_API_BASE_URL,
 ) {
-    suspend fun getPeriods(idToken: String): String = authenticatedGet("/api/tracking/periods", idToken)
+    suspend fun getPeriods(idToken: String): List<PeriodRecord> {
+        val items = JSONObject(authenticatedGet("/api/tracking/periods", idToken)).getJSONArray("data")
+        return List(items.length()) { index ->
+            val item = items.getJSONObject(index)
+            PeriodRecord(item.getString("id"), LocalDate.parse(item.getString("startDate").take(10)), item.optString("endDate").takeIf { it.length >= 10 }?.let { LocalDate.parse(it.take(10)) })
+        }
+    }
 
     suspend fun getMoods(idToken: String): String = authenticatedGet("/api/tracking/moods", idToken)
 
     suspend fun recordPeriod(idToken: String, startDate: String, endDate: String? = null): String = authenticatedJson("/api/tracking/periods", idToken, "POST", "{\"startDate\":\"$startDate\"${endDate?.let { ",\"endDate\":\"$it\"" } ?: ""}}")
+
+    suspend fun finishPeriod(idToken: String, id: String, endDate: String): String = authenticatedJson("/api/tracking/periods/$id", idToken, "PATCH", "{\"endDate\":\"$endDate\"}")
 
     suspend fun recordMood(idToken: String, mood: String, loggedAt: String, note: String? = null): String = authenticatedJson("/api/tracking/moods", idToken, "PUT", "{\"mood\":\"${mood.replace("\\", "\\\\").replace("\"", "\\\"")}\",\"loggedAt\":\"$loggedAt\"${note?.let { ",\"note\":\"${it.replace("\\", "\\\\").replace("\"", "\\\"")}" } ?: ""}}")
 

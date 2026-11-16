@@ -21,15 +21,23 @@ import id.ac.binus.bloomapp.ui.theme.*
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import id.ac.binus.bloomapp.presentation.tracking.TrackingViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
 
 @Composable
-fun TodayScreen() {
+fun TodayScreen(tracking: TrackingViewModel) {
 
     val today = LocalDate.now()
 
     var selectedDate by remember {
         mutableStateOf(today)
     }
+    val trackingState by tracking.state.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { tracking.refresh() }
+    val activePeriod = trackingState.periods.firstOrNull { it.endDate == null }
+    val selectedPeriod = trackingState.periods.firstOrNull { it.includes(selectedDate) }
 
     // Temporary preview data
     // Will be replaced by actual cycle calculations later.
@@ -121,6 +129,19 @@ fun TodayScreen() {
                 phase = selectedPhase,
                 modifier = Modifier.fillMaxWidth()
             )
+
+            Text(
+                text = if (selectedPeriod != null) "Period tercatat ${selectedPeriod.startDate}" else "Belum ada catatan period untuk tanggal ini",
+                color = TextSecondary,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+            Button(
+                onClick = { if (activePeriod == null) tracking.start(selectedDate) else tracking.finish(activePeriod.id, selectedDate) },
+                enabled = !trackingState.saving,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(if (activePeriod == null) "Log period hari ini" else "Selesai period hari ini") }
+            trackingState.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         }
     }
 }
