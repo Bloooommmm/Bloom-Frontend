@@ -2,32 +2,15 @@
 package id.ac.binus.bloomapp.ui.screens.calendar
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-//import androidx.compose.foundation.layout.weight
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +23,7 @@ import id.ac.binus.bloomapp.ui.theme.*
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Locale
 
 private enum class CalendarPhase {
@@ -62,11 +46,6 @@ fun CalendarScreen(
     var selectedDate by remember {
         mutableStateOf(today)
     }
-
-    val monthFormatter = DateTimeFormatter.ofPattern(
-        "MMMM yyyy",
-        Locale.ENGLISH
-    )
 
     val dateFormatter = DateTimeFormatter.ofPattern(
         "MMMM d, yyyy",
@@ -91,28 +70,25 @@ fun CalendarScreen(
             .fillMaxSize()
             .background(Background)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 24.dp),
+            .padding(horizontal = 16.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(28.dp)
     ) {
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Header
-        Column(
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(
-                text = "Calendar",
-                style = MaterialTheme.typography.headlineMedium,
-                color = TextPrimary,
-                fontWeight = FontWeight.Bold
-            )
-        }
+        Text(
+            text = "Calendar",
+            style = MaterialTheme.typography.headlineMedium,
+            color = TextPrimary,
+            fontWeight = FontWeight.Bold
+        )
 
         // Calendar section
         Column(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+
             // Month navigation
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -141,7 +117,7 @@ fun CalendarScreen(
                 ) {
                     Text(
                         text = currentMonth.month.getDisplayName(
-                            java.time.format.TextStyle.FULL,
+                            TextStyle.FULL,
                             Locale.ENGLISH
                         ),
                         style = MaterialTheme.typography.titleMedium,
@@ -175,7 +151,6 @@ fun CalendarScreen(
                 }
             }
 
-
             // Weekday labels
             Row(
                 modifier = Modifier.fillMaxWidth()
@@ -203,8 +178,7 @@ fun CalendarScreen(
             ) {
                 calendarDates.chunked(7).forEach { week ->
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(0.dp)
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         week.forEach { date ->
                             CalendarDateItem(
@@ -224,7 +198,6 @@ fun CalendarScreen(
             }
         }
 
-
         // Phase legend
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -236,14 +209,21 @@ fun CalendarScreen(
                 label = "Period"
             )
 
-            Spacer(modifier = Modifier.width(20.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
             PhaseLegend(
                 color = PhaseFollicular,
                 label = "Follicular"
             )
 
-            Spacer(modifier = Modifier.width(20.dp))
+            Spacer(modifier = Modifier.width(12.dp))
+
+            PhaseLegend(
+                color = PhaseOvulation,
+                label = "Ovulation"
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
 
             PhaseLegend(
                 color = PhaseLuteal,
@@ -256,7 +236,7 @@ fun CalendarScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(MaterialTheme.shapes.large)
-                .background(SurfaceVariant)
+                .background(getCalendarPhaseLightColor(selectedPhase))
                 .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -288,15 +268,12 @@ fun CalendarScreen(
                         "Luteal Phase"
                 },
                 style = MaterialTheme.typography.bodyMedium,
-                color = getCalendarPhaseColor(selectedPhase),
+                color = getCalendarPhaseDarkColor(selectedPhase),
                 fontWeight = FontWeight.SemiBold
             )
         }
     }
 }
-
-
-
 
 @Composable
 private fun CalendarDateItem(
@@ -322,7 +299,7 @@ private fun CalendarDateItem(
         verticalArrangement = Arrangement.Center
     ) {
 
-// Date number and Today indicator
+        // Date number
         Box(
             modifier = Modifier.size(36.dp),
             contentAlignment = Alignment.Center
@@ -337,7 +314,6 @@ private fun CalendarDateItem(
                 )
             }
 
-            // Date number
             Text(
                 text = date.dayOfMonth.toString(),
                 color = when {
@@ -354,20 +330,16 @@ private fun CalendarDateItem(
             )
         }
 
-
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Full-width phase indicator
+        // Phase indicator
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 3.dp)
                 .height(3.dp)
                 .background(
-                    color = if (
-                        isCurrentMonth &&
-                        phase != CalendarPhase.LUTEAL
-                    ) {
+                    color = if (isCurrentMonth) {
                         phaseColor
                     } else {
                         Color.Transparent
@@ -384,11 +356,11 @@ private fun PhaseLegend(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(8.dp)
+                .size(7.dp)
                 .clip(CircleShape)
                 .background(color)
         )
@@ -430,10 +402,30 @@ private fun getCalendarPhaseColor(
 ): Color {
     return when (phase) {
         CalendarPhase.MENSTRUATION -> PhaseMenstruation
-
-        CalendarPhase.FOLLICULAR,
-        CalendarPhase.OVULATION -> PhaseFollicular
-
+        CalendarPhase.FOLLICULAR -> PhaseFollicular
+        CalendarPhase.OVULATION -> PhaseOvulation
         CalendarPhase.LUTEAL -> PhaseLuteal
+    }
+}
+
+private fun getCalendarPhaseLightColor(
+    phase: CalendarPhase
+): Color {
+    return when (phase) {
+        CalendarPhase.MENSTRUATION -> PhaseMenstruationLight
+        CalendarPhase.FOLLICULAR -> PhaseFollicularLight
+        CalendarPhase.OVULATION -> PhaseOvulationLight
+        CalendarPhase.LUTEAL -> PhaseLutealLight
+    }
+}
+
+private fun getCalendarPhaseDarkColor(
+    phase: CalendarPhase
+): Color {
+    return when (phase) {
+        CalendarPhase.MENSTRUATION -> PhaseMenstruationDark
+        CalendarPhase.FOLLICULAR -> PhaseFollicularDark
+        CalendarPhase.OVULATION -> PhaseOvulationDark
+        CalendarPhase.LUTEAL -> PhaseLutealDark
     }
 }

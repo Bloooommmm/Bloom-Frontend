@@ -30,13 +30,26 @@ val Error = Color(0xFFE85D75)
 val Info = Color(0xFF579BE8)
 
 // Menstrual Cycle Phase Colors
-val PhaseMenstruation = Color(0xFFF1667E)
-val PhaseMenstruationLight = Color(0xFFFFDEE4)
-val PhaseMenstruationDark = Color(0xFFDB3549)
+// Menstruation (Period) - hot pink
+val PhaseMenstruation = Color(0xFFFF4D8D)
+val PhaseMenstruationLight = Color(0xFFFFE0EC)
+val PhaseMenstruationDark = Color(0xFFD81B6A)
 
-val PhaseFollicular = Color(0xFF65D1BD)
-val PhaseFollicularLight = Color(0xFFE5F7F2)
-val PhaseFollicularDark = Color(0xFF2AA285)
+// Follicular (Fresh) - vivid teal
+val PhaseFollicular = Color(0xFF1FD1B2)
+val PhaseFollicularLight = Color(0xFFD9F8F1)
+val PhaseFollicularDark = Color(0xFF0A9B82)
 
-val PhaseLuteal = Color(0xFFE5E9EE)
-val PhaseLutealDark = Color(0xFFABA9A9)
+// Ovulation (Glow) - sunny amber (opsional, edukasi saja)
+val PhaseOvulation = Color(0xFFFFB627)
+val PhaseOvulationLight = Color(0xFFFFEFC9)
+val PhaseOvulationDark = Color(0xFFD98A00)
+
+// Luteal / PMS (Cozy) - bright violet
+val PhaseLuteal = Color(0xFF9B6BFF)
+val PhaseLutealLight = Color(0xFFEBE1FF)
+val PhaseLutealDark = Color(0xFF6D3FE0)
+
+// Neutral - hari polos / belum ada data
+val PhaseNeutral = Color(0xFFE5E9EE)
+val PhaseNeutralDark = Color(0xFFABA9A9)

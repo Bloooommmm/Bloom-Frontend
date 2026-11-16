@@ -13,9 +13,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.BorderStroke
 import id.ac.binus.bloomapp.R
 import id.ac.binus.bloomapp.ui.theme.*
-import id.ac.binus.bloomapp.ui.components.CustomButton
 
 @Composable
 fun LoginScreen(
@@ -53,7 +56,7 @@ fun LoginScreen(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Your Journey Starts Here, with Bloom.",
+                text = "Your new journey starts here.",
                 style = MaterialTheme.typography.headlineMedium,
                 color = TextPrimary,
                 textAlign = TextAlign.Center
@@ -75,20 +78,36 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             // Google Sign In Button
-            CustomButton(
-                text = "Continue with Google",
+            // Google Sign In Button
+            OutlinedButton(
                 onClick = onGoogleSignInClick,
-                containerColor = Color(0xFFF9F9F9),
-                shadowColor = Color(0xFFD8D7D7),
-                contentColor = Color(0xFF53575B),
-                leadingIcon = {
-                    Image(
-                        painter = painterResource(R.drawable.icon_google),
-                        contentDescription = "Google Icon",
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            )
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = CircleShape,
+                border = BorderStroke(
+                    width = 1.5.dp,
+                    color = Color(0xFFD8D7D7)
+                ),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color(0xFF53575B)
+                ),
+                contentPadding = PaddingValues(horizontal = 24.dp)
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.icon_google),
+                    contentDescription = "Google Icon",
+                    modifier = Modifier.size(20.dp)
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Text(
+                    text = "Continue with Google",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color(0xFF53575B)
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 

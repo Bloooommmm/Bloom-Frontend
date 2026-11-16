@@ -74,12 +74,11 @@ fun CycleDateSelector(
 
             val phaseColor = when (item.phase) {
                 CyclePhase.MENSTRUATION -> PhaseMenstruation
-                CyclePhase.FOLLICULAR,
-                CyclePhase.OVULATION -> PhaseFollicular
-                CyclePhase.LUTEAL,
+                CyclePhase.FOLLICULAR -> PhaseFollicular
+                CyclePhase.OVULATION -> PhaseOvulation
+                CyclePhase.LUTEAL -> PhaseLuteal
                 null -> null
             }
-
 
             Column(
                 modifier = Modifier
@@ -87,7 +86,7 @@ fun CycleDateSelector(
                     .clip(CircleShape)
                     .background(
                         when {
-                            isToday -> phaseColor ?: SurfaceVariant
+                            isToday -> phaseColor ?: PhaseNeutral
                             isSelected -> SurfaceVariant
                             else -> Color.Transparent
                         }
@@ -105,18 +104,20 @@ fun CycleDateSelector(
 
                 // Day of week
                 Text(
-                    text = item.date.dayOfWeek
-                        .getDisplayName(
-                            TextStyle.SHORT,
-                            Locale.ENGLISH
-                        ),
+                    text = item.date.dayOfWeek.getDisplayName(
+                        TextStyle.SHORT,
+                        Locale.ENGLISH
+                    ),
                     fontSize = 10.sp,
-                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.SemiBold,
+                    fontWeight = if (isToday) {
+                        FontWeight.Bold
+                    } else {
+                        FontWeight.SemiBold
+                    },
                     color = if (isToday) Color.White else TextSecondary
                 )
 
-
-// Date number
+                // Date number
                 Box(
                     modifier = Modifier
                         .size(if (isToday) 40.dp else 26.dp)
@@ -137,12 +138,10 @@ fun CycleDateSelector(
                         fontWeight = FontWeight.SemiBold,
                         color = when {
                             isToday -> TextPrimary
-                            item.phase == CyclePhase.OVULATION -> PhaseFollicular
                             else -> TextPrimary
                         }
                     )
                 }
-
 
                 // Cycle phase indicator
                 if (!isToday && phaseColor != null) {
