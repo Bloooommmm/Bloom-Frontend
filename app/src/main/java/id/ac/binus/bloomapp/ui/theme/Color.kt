@@ -36,9 +36,9 @@ val PhaseMenstruationLight = Color(0xFFFFE0EC)
 val PhaseMenstruationDark = Color(0xFFD81B6A)
 
 // Follicular (Fresh) - vivid teal
-val PhaseFollicular = Color(0xFF1FD1B2)
-val PhaseFollicularLight = Color(0xFFD9F8F1)
-val PhaseFollicularDark = Color(0xFF0A9B82)
+val PhaseFollicular = Color(0xFF0CC1E1)
+val PhaseFollicularLight = Color(0xFFD9F4F8)
+val PhaseFollicularDark = Color(0xFF1698B4)
 
 // Ovulation (Glow) - sunny amber (opsional, edukasi saja)
 val PhaseOvulation = Color(0xFFFFB627)

@@ -60,7 +60,7 @@ fun OnboardingScreen(
 
             // Headline
             Text(
-                text = "Grow Together,\nwith Bloom.",
+                text = "Grow Into Your Best Self with Bloom.",
                 style = MaterialTheme.typography.displayLarge,
                 color = TextPrimary,
                 textAlign = TextAlign.Center
