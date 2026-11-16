@@ -36,4 +36,12 @@ PowerShell build commands:
 .\gradlew.bat test
 ```
 
-The companion API lives in [`../Bloom-Backend`](../Bloom-Backend). Keep API URLs environment-specific when integration is added.
+The companion API is configured at `https://bloom-be.yanzz.dev`. The Lessons tab loads published lessons from `GET /api/lessons` and shows a retry state when the API is unavailable.
+
+## APK pipeline
+
+GitHub Actions builds a debug APK on pushes and pull requests for `main`. Download it from the workflow's **Artifacts** section. The workflow runs unit tests first and retains each APK artifact for 14 days.
+
+## Firebase
+
+See [`FIREBASE_SETUP.md`](./FIREBASE_SETUP.md) for Firebase project setup, SHA fingerprints, Google sign-in, backend token verification, and optional App Distribution.
