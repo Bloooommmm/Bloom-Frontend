@@ -30,10 +30,10 @@ class LessonsViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             runCatching { repository.getLessons() }
                 .onSuccess { lessons -> _uiState.value = LessonsUiState(isLoading = false, lessons = lessons) }
-                .onFailure { error ->
+                .onFailure {
                     _uiState.value = LessonsUiState(
                         isLoading = false,
-                        error = error.message ?: "Unable to load lessons",
+                        error = "Materi belum bisa dimuat. Coba lagi.",
                     )
                 }
         }
