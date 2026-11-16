@@ -17,6 +17,24 @@ data class Lesson(
 class BloomApi(
     private val baseUrl: String = BuildConfig.BLOOM_API_BASE_URL,
 ) {
+    suspend fun syncCurrentUser(idToken: String): Unit = withContext(Dispatchers.IO) {
+        val connection = (URL("${baseUrl.trimEnd('/')}/api/users/me").openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 10_000
+            readTimeout = 10_000
+            setRequestProperty("Authorization", "Bearer $idToken")
+            setRequestProperty("Accept", "application/json")
+        }
+        try {
+            if (connection.responseCode !in 200..299) {
+                throw BloomApiException("Profile sync failed: HTTP ${connection.responseCode}")
+            }
+            connection.inputStream.close()
+        } finally {
+            connection.disconnect()
+        }
+    }
+
     suspend fun getLessons(): List<Lesson> = withContext(Dispatchers.IO) {
         val connection = (URL("${baseUrl.trimEnd('/')}/api/lessons").openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"

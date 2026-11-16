@@ -19,11 +19,46 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.BorderStroke
 import id.ac.binus.bloomapp.R
 import id.ac.binus.bloomapp.ui.theme.*
+import android.app.Activity
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import id.ac.binus.bloomapp.data.network.BloomApi
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 
 @Composable
 fun LoginScreen(
     onGoogleSignInClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode != Activity.RESULT_OK) return@rememberLauncherForActivityResult
+        runCatching {
+            val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).result
+            val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+            FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener { authTask ->
+                if (authTask.isSuccessful) {
+                    FirebaseAuth.getInstance().currentUser?.getIdToken(false)?.addOnSuccessListener { token ->
+                        scope.launch {
+                            try {
+                                BloomApi().syncCurrentUser(token.token ?: error("Missing Firebase token"))
+                                onGoogleSignInClick()
+                            } catch (_: Exception) {
+                                Toast.makeText(context, "Gagal terhubung ke backend. Coba lagi.", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                } else Toast.makeText(context, "Login gagal. Coba lagi.", Toast.LENGTH_SHORT).show()
+            }
+        }.onFailure { Toast.makeText(context, "Login Google dibatalkan.", Toast.LENGTH_SHORT).show() }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -80,7 +115,13 @@ fun LoginScreen(
             // Google Sign In Button
             // Google Sign In Button
             OutlinedButton(
-                onClick = onGoogleSignInClick,
+                onClick = {
+                    val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(context.getString(id.ac.binus.bloomapp.R.string.default_web_client_id))
+                        .requestEmail()
+                        .build()
+                    launcher.launch(GoogleSignIn.getClient(context, options).signInIntent)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
