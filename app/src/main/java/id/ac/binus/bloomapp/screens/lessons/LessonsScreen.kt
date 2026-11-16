@@ -62,16 +62,20 @@ private fun LessonCard(lesson: Lesson, onClick: () -> Unit) {
     val shape = RoundedCornerShape(20.dp)
     Box(Modifier.fillMaxWidth().heightIn(min = 150.dp).background(Color(0xFFDC4862), shape)) {
         Surface(Modifier.fillMaxWidth().offset(y = (-4).dp).clickable(onClick = onClick), shape = shape, color = Color.White, border = BorderStroke(1.dp, Primary)) {
-            Column(Modifier.padding(18.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.MenuBook, contentDescription = null, tint = Primary, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("${lesson.estimatedReadTime} min read", color = TextSecondary, style = MaterialTheme.typography.labelMedium)
-                    Spacer(Modifier.weight(1f))
-                    Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = "Read article", tint = Primary)
+            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Image(painterResource(lessonIllustrations(lesson).firstOrNull() ?: R.drawable.article_mood_1), "", Modifier.size(96.dp), contentScale = ContentScale.Fit)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.MenuBook, contentDescription = null, tint = Primary, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("${lesson.estimatedReadTime} min", color = TextSecondary, style = MaterialTheme.typography.labelMedium)
+                        Spacer(Modifier.weight(1f))
+                        Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = "Read article", tint = Primary)
+                    }
+                    Text(lesson.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.padding(top = 8.dp), maxLines = 3)
+                    Text(articlePreview(lesson.content), maxLines = 2, color = TextSecondary, modifier = Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodySmall)
                 }
-                Text(lesson.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.padding(top = 12.dp))
-                Text(articlePreview(lesson.content), maxLines = 3, color = TextSecondary, modifier = Modifier.padding(top = 6.dp))
             }
         }
     }
