@@ -1,1 +1,3 @@
-<bitmap xmlns:android="http://schemas.android.com/apk/res/android" android:src="@drawable/bloom_launcher_generated" android:gravity="center" />
+<inset xmlns:android="http://schemas.android.com/apk/res/android" android:inset="18%">
+    <bitmap android:src="@drawable/bloom_launcher_generated" android:gravity="fill" />
+</inset>

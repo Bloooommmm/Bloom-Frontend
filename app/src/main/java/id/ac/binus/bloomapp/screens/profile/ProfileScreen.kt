@@ -16,8 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -27,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +37,7 @@ import id.ac.binus.bloomapp.ui.theme.PrimaryLight
 import id.ac.binus.bloomapp.ui.theme.Surface
 import id.ac.binus.bloomapp.ui.theme.TextPrimary
 import id.ac.binus.bloomapp.ui.theme.TextSecondary
+import id.ac.binus.bloomapp.ui.components.CustomButton
 
 @Composable
 fun ProfileScreen(onSignedOut: () -> Unit) {
@@ -75,15 +73,11 @@ fun ProfileScreen(onSignedOut: () -> Unit) {
             }
         }
         Spacer(Modifier.height(4.dp))
-        Button(
+        CustomButton(
+            text = "Sign out",
             onClick = { FirebaseAuth.getInstance().signOut(); onSignedOut() },
-            modifier = Modifier.fillMaxWidth().height(52.dp).shadow(8.dp, RoundedCornerShape(16.dp)),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Primary)
-        ) {
-            Icon(Icons.Outlined.ExitToApp, contentDescription = null)
-            Spacer(Modifier.size(8.dp))
-            Text("Sign out", fontWeight = FontWeight.Bold)
-        }
+            modifier = Modifier.fillMaxWidth(),
+            leadingIcon = { Icon(Icons.Outlined.ExitToApp, contentDescription = null) },
+        )
     }
 }

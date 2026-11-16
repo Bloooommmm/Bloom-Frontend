@@ -1,4 +1,3 @@
-
 package id.ac.binus.bloomapp.ui.screens.calendar
 
 import androidx.compose.foundation.background
@@ -6,10 +5,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ChevronLeft
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,435 +19,70 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import id.ac.binus.bloomapp.data.network.PeriodRecord
+import id.ac.binus.bloomapp.presentation.tracking.TrackingViewModel
+import id.ac.binus.bloomapp.ui.components.CustomButton
 import id.ac.binus.bloomapp.ui.theme.*
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
+import java.time.temporal.ChronoUnit
 import java.util.Locale
-import id.ac.binus.bloomapp.presentation.tracking.TrackingViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import id.ac.binus.bloomapp.ui.components.CustomButton
-
-private enum class CalendarPhase {
-    MENSTRUATION,
-    FOLLICULAR,
-    OVULATION,
-    LUTEAL
-}
 
 @Composable
-fun CalendarScreen(
-    tracking: TrackingViewModel,
-    modifier: Modifier = Modifier
-) {
+fun CalendarScreen(tracking: TrackingViewModel, modifier: Modifier = Modifier) {
     val today = remember { LocalDate.now() }
-    val trackingState by tracking.state.collectAsStateWithLifecycle()
+    val state by tracking.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { tracking.refresh() }
-    val activePeriod = trackingState.periods.firstOrNull { it.endDate == null }
-
-    var currentMonth by remember {
-        mutableStateOf(YearMonth.from(today))
-    }
-
-    var selectedDate by remember {
-        mutableStateOf(today)
-    }
-    val selectedPeriod = trackingState.periods.firstOrNull { it.includes(selectedDate) }
-
-    val dateFormatter = DateTimeFormatter.ofPattern(
-        "MMMM d, yyyy",
-        Locale.ENGLISH
-    )
-
-    val firstDay = currentMonth.atDay(1)
-
-    // Calendar starts on Monday
-    val calendarStart = firstDay.minusDays(
-        (firstDay.dayOfWeek.value - 1).toLong()
-    )
-
-    val calendarDates = (0 until 42).map { offset ->
-        calendarStart.plusDays(offset.toLong())
-    }
-
-    val selectedPhase = getCalendarPhase(selectedDate, today, trackingState.periods)
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Background)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(28.dp)
-    ) {
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Header
-        Text(
-            text = "Calendar",
-            style = MaterialTheme.typography.headlineMedium,
-            color = TextPrimary,
-            fontWeight = FontWeight.Bold
-        )
-
-        // Calendar section
-        Column(
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-
-            // Month navigation
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    IconButton(
-                        onClick = {
-                            currentMonth = currentMonth.minusMonths(1)
-                        }
-                    ) {
-                        Text(
-                            text = "‹",
-                            fontSize = 30.sp,
-                            color = TextSecondary
-                        )
-                    }
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = currentMonth.month.getDisplayName(
-                            TextStyle.FULL,
-                            Locale.ENGLISH
-                        ),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    Text(
-                        text = " ${currentMonth.year}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextSecondary,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.CenterEnd
-                ) {
-                    IconButton(
-                        onClick = {
-                            currentMonth = currentMonth.plusMonths(1)
-                        }
-                    ) {
-                        Text(
-                            text = "›",
-                            fontSize = 30.sp,
-                            color = TextSecondary
-                        )
-                    }
-                }
-            }
-
-            // Weekday labels
-            Row(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                val weekdays = listOf(
-                    "M", "T", "W", "T",
-                    "F", "S", "S"
-                )
-
-                weekdays.forEach { day ->
-                    Text(
-                        text = day,
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center,
-                        color = TextSecondary,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            // Calendar dates
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                calendarDates.chunked(7).forEach { week ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        week.forEach { date ->
-                            CalendarDateItem(
-                                date = date,
-                                today = today,
-                                selectedDate = selectedDate,
-                                currentMonth = currentMonth,
-                                phase = getCalendarPhase(date, today, trackingState.periods),
-                                onClick = {
-                                    selectedDate = date
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
+    var month by remember { mutableStateOf(YearMonth.from(today)) }
+    var selected by remember { mutableStateOf(today) }
+    val active = state.periods.firstOrNull { it.endDate == null }
+    val selectedPeriod = state.periods.firstOrNull { it.includes(selected) }
+    val start = month.atDay(1).minusDays((month.atDay(1).dayOfWeek.value - 1).toLong())
+    val dates = (0..41).map { start.plusDays(it.toLong()) }
+    Column(modifier.fillMaxSize().background(Background).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(22.dp)) {
+        Text("Calendar", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), color = TextPrimary)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            IconButton({ month = month.minusMonths(1) }) { Icon(Icons.Outlined.ChevronLeft, "Previous month", tint = TextPrimary) }
+            Text("${month.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)} ${month.year}", Modifier.weight(1f), textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+            IconButton({ month = month.plusMonths(1) }) { Icon(Icons.Outlined.ChevronRight, "Next month", tint = TextPrimary) }
+        }
+        Row(Modifier.fillMaxWidth()) { listOf("M", "T", "W", "T", "F", "S", "S").forEach { Text(it, Modifier.weight(1f), textAlign = TextAlign.Center, color = TextSecondary, fontWeight = FontWeight.Bold) } }
+        dates.chunked(7).forEach { week -> Row(Modifier.fillMaxWidth()) { week.forEach { date -> CalendarDate(date, month, today, selected, state.periods) { selected = date } } } }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Box(Modifier.size(10.dp).clip(CircleShape).background(PhaseMenstruation)); Text("Logged period", color = TextSecondary); Spacer(Modifier.width(8.dp)); Box(Modifier.size(10.dp).clip(CircleShape).background(Secondary)); Text("Today", color = TextSecondary) }
+        Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), color = PrimaryLight) {
+            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(selected.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.ENGLISH)), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Text(if (selectedPeriod != null) "Period logged" else "No period logged", color = TextSecondary)
+                CustomButton(text = if (active == null) "Log period start" else "Log period end", onClick = { if (active == null) tracking.start(selected) else tracking.finish(active.id, selected) }, enabled = !state.saving, modifier = Modifier.fillMaxWidth())
+                if (selected != today) TextButton({ selected = today; month = YearMonth.from(today) }, Modifier.align(Alignment.End)) { Text("Back to today", color = Primary) }
             }
         }
-
-        // Phase legend
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            PhaseLegend(
-                color = PhaseMenstruation,
-                label = "Period"
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            PhaseLegend(
-                color = PhaseFollicular,
-                label = "Follicular"
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            PhaseLegend(
-                color = PhaseOvulation,
-                label = "Ovulation"
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            PhaseLegend(
-                color = PhaseLuteal,
-                label = "Luteal"
-            )
+        Text("Period history", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+        if (state.periods.isEmpty()) Text("Your logged periods will appear here.", color = TextSecondary)
+        state.periods.sortedByDescending { it.startDate }.forEach { period ->
+            val end = period.endDate
+            val duration = end?.let { ChronoUnit.DAYS.between(period.startDate, it).toInt() + 1 }
+            Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(10.dp).clip(CircleShape).background(PhaseMenstruation))
+                Spacer(Modifier.width(12.dp))
+                Column { Text(period.startDate.format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)), fontWeight = FontWeight.SemiBold, color = TextPrimary); Text(if (duration != null) "$duration days" else "Ongoing", color = TextSecondary) }
+            }
         }
-
-        // Selected date information
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(MaterialTheme.shapes.large)
-                .background(getCalendarPhaseLightColor(selectedPhase))
-                .padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Selected Date",
-                style = MaterialTheme.typography.labelMedium,
-                color = TextSecondary
-            )
-
-            Text(
-                text = selectedDate.format(dateFormatter),
-                style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Text(
-                text = when (selectedPhase) {
-                    CalendarPhase.MENSTRUATION ->
-                        "Menstruation"
-
-                    CalendarPhase.FOLLICULAR ->
-                        "Follicular Phase"
-
-                    CalendarPhase.OVULATION ->
-                        "Ovulation"
-
-                    CalendarPhase.LUTEAL ->
-                        "Luteal Phase"
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = getCalendarPhaseDarkColor(selectedPhase),
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = if (selectedPeriod != null) "Period tercatat" else "Tidak ada catatan period",
-                color = getCalendarPhaseDarkColor(selectedPhase),
-                fontWeight = FontWeight.SemiBold,
-            )
-            CustomButton(
-                text = if (activePeriod == null) "Catat mulai period" else "Catat selesai period",
-                onClick = { if (activePeriod == null) tracking.start(selectedDate) else tracking.finish(activePeriod.id, selectedDate) },
-                enabled = !trackingState.saving,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
     }
 }
 
 @Composable
-private fun CalendarDateItem(
-    date: LocalDate,
-    today: LocalDate,
-    selectedDate: LocalDate,
-    currentMonth: YearMonth,
-    phase: CalendarPhase,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val isSelected = date == selectedDate
-    val isToday = date == today
-    val isCurrentMonth = YearMonth.from(date) == currentMonth
-
-    val phaseColor = getCalendarPhaseColor(phase)
-
-    Column(
-        modifier = modifier
-            .height(68.dp)
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-
-        // Date number
-        Box(
-            modifier = Modifier.size(36.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            // Selected date background
-            if (isSelected) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(SurfaceVariant)
-                )
-            }
-
-            Text(
-                text = date.dayOfMonth.toString(),
-                color = when {
-                    !isCurrentMonth -> Outline
-                    isToday -> Color(0xFF4E95EE)
-                    else -> TextPrimary
-                },
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = when {
-                    isToday -> FontWeight.Bold
-                    isSelected -> FontWeight.SemiBold
-                    else -> FontWeight.Medium
-                }
-            )
+private fun RowScope.CalendarDate(date: LocalDate, month: YearMonth, today: LocalDate, selected: LocalDate, periods: List<PeriodRecord>, onClick: () -> Unit) {
+    val logged = periods.any { it.includes(date) }
+    val current = YearMonth.from(date) == month
+    Box(Modifier.weight(1f).height(52.dp).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Box(Modifier.size(34.dp).clip(CircleShape).background(if (date == selected) PrimaryLight else Color.Transparent), contentAlignment = Alignment.Center) { Text(date.dayOfMonth.toString(), color = if (!current) Outline else if (date == today) Secondary else TextPrimary, fontWeight = if (date == today || date == selected) FontWeight.Bold else FontWeight.Normal) }
+            Box(Modifier.size(6.dp).clip(CircleShape).background(if (logged) PhaseMenstruation else Color.Transparent))
         }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Phase indicator
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 3.dp)
-                .height(3.dp)
-                .background(
-                    color = if (isCurrentMonth) {
-                        phaseColor
-                    } else {
-                        Color.Transparent
-                    }
-                )
-        )
-    }
-}
-
-@Composable
-private fun PhaseLegend(
-    color: Color,
-    label: String
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(5.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(7.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontSize = 10.sp
-            ),
-            color = TextSecondary,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-private fun getCalendarPhase(
-    date: LocalDate,
-    today: LocalDate,
-    periods: List<id.ac.binus.bloomapp.data.network.PeriodRecord> = emptyList(),
-): CalendarPhase {
-    if (periods.any { it.includes(date) }) return CalendarPhase.MENSTRUATION
-    val daysFromToday = java.time.temporal.ChronoUnit.DAYS
-        .between(today, date)
-        .toInt()
-
-    val cycleDay = Math.floorMod(
-        7 + daysFromToday,
-        28
-    ) + 1
-
-    return when (cycleDay) {
-        in 1..5 -> CalendarPhase.MENSTRUATION
-        in 6..13 -> CalendarPhase.FOLLICULAR
-        14 -> CalendarPhase.OVULATION
-        else -> CalendarPhase.LUTEAL
-    }
-}
-
-private fun getCalendarPhaseColor(
-    phase: CalendarPhase
-): Color {
-    return when (phase) {
-        CalendarPhase.MENSTRUATION -> PhaseMenstruation
-        CalendarPhase.FOLLICULAR -> PhaseFollicular
-        CalendarPhase.OVULATION -> PhaseOvulation
-        CalendarPhase.LUTEAL -> PhaseLuteal
-    }
-}
-
-private fun getCalendarPhaseLightColor(
-    phase: CalendarPhase
-): Color {
-    return when (phase) {
-        CalendarPhase.MENSTRUATION -> PhaseMenstruationLight
-        CalendarPhase.FOLLICULAR -> PhaseFollicularLight
-        CalendarPhase.OVULATION -> PhaseOvulationLight
-        CalendarPhase.LUTEAL -> PhaseLutealLight
-    }
-}
-
-private fun getCalendarPhaseDarkColor(
-    phase: CalendarPhase
-): Color {
-    return when (phase) {
-        CalendarPhase.MENSTRUATION -> PhaseMenstruationDark
-        CalendarPhase.FOLLICULAR -> PhaseFollicularDark
-        CalendarPhase.OVULATION -> PhaseOvulationDark
-        CalendarPhase.LUTEAL -> PhaseLutealDark
     }
 }

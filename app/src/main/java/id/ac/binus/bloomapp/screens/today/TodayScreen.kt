@@ -5,8 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.shadow
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -25,8 +23,6 @@ import java.time.format.TextStyle
 import java.util.Locale
 import id.ac.binus.bloomapp.presentation.tracking.TrackingViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import id.ac.binus.bloomapp.ui.components.CustomButton
 
 @Composable
@@ -125,18 +121,12 @@ fun TodayScreen(tracking: TrackingViewModel) {
         ) {
 
             //Cycle Progress
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            ) {
-                CycleProgressRing(
-                    cycleDay = selectedCycleDay,
-                    cycleLength = 28,
-                    phase = selectedPhase,
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
-                )
-            }
+            CycleProgressRing(
+                cycleDay = selectedCycleDay,
+                cycleLength = 28,
+                phase = selectedPhase,
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
 
             Text(
                 text = if (selectedPeriod != null) "Period tercatat ${selectedPeriod.startDate}" else "Belum ada catatan period untuk tanggal ini",
