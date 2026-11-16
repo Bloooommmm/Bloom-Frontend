@@ -25,6 +25,8 @@ import id.ac.binus.bloomapp.presentation.tracking.TrackingViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 
 @Composable
 fun TodayScreen(tracking: TrackingViewModel) {
@@ -41,16 +43,17 @@ fun TodayScreen(tracking: TrackingViewModel) {
 
     // Temporary preview data
     // Will be replaced by actual cycle calculations later.
-    val dateItems = remember(today) {
+    val dateItems = remember(today, trackingState.periods) {
         (-14..16).map { offset ->
 
             // Preview: today is Day 8 of a 28-day cycle.
             val cycleDay = ((7 + offset) % 28 + 28) % 28 + 1
 
-            val phase = when (cycleDay) {
-                in 1..5 -> CyclePhase.MENSTRUATION
-                in 6..13 -> CyclePhase.FOLLICULAR
-                14 -> CyclePhase.OVULATION
+            val phase = when {
+                trackingState.periods.any { it.includes(today.plusDays(offset.toLong())) } -> CyclePhase.MENSTRUATION
+                cycleDay in 1..5 -> CyclePhase.MENSTRUATION
+                cycleDay in 6..13 -> CyclePhase.FOLLICULAR
+                cycleDay == 14 -> CyclePhase.OVULATION
                 else -> CyclePhase.LUTEAL
             }
 
@@ -123,12 +126,18 @@ fun TodayScreen(tracking: TrackingViewModel) {
         ) {
 
             //Cycle Progress
-            CycleProgressRing(
-                cycleDay = selectedCycleDay,
-                cycleLength = 28,
-                phase = selectedPhase,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            ) {
+                CycleProgressRing(
+                    cycleDay = selectedCycleDay,
+                    cycleLength = 28,
+                    phase = selectedPhase,
+                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                )
+            }
 
             Text(
                 text = if (selectedPeriod != null) "Period tercatat ${selectedPeriod.startDate}" else "Belum ada catatan period untuk tanggal ini",
@@ -140,7 +149,7 @@ fun TodayScreen(tracking: TrackingViewModel) {
                 onClick = { if (activePeriod == null) tracking.start(selectedDate) else tracking.finish(activePeriod.id, selectedDate) },
                 enabled = !trackingState.saving,
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text(if (activePeriod == null) "Log period hari ini" else "Selesai period hari ini") }
+            ) { Text(if (activePeriod == null) "Catat mulai haid" else "Catat selesai haid") }
             trackingState.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         }
     }

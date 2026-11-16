@@ -71,7 +71,7 @@ fun CalendarScreen(
         calendarStart.plusDays(offset.toLong())
     }
 
-    val selectedPhase = getCalendarPhase(selectedDate, today)
+    val selectedPhase = getCalendarPhase(selectedDate, today, trackingState.periods)
 
     Column(
         modifier = modifier
@@ -194,7 +194,7 @@ fun CalendarScreen(
                                 today = today,
                                 selectedDate = selectedDate,
                                 currentMonth = currentMonth,
-                                phase = getCalendarPhase(date, today),
+                                phase = getCalendarPhase(date, today, trackingState.periods),
                                 onClick = {
                                     selectedDate = date
                                 },
@@ -396,8 +396,10 @@ private fun PhaseLegend(
 
 private fun getCalendarPhase(
     date: LocalDate,
-    today: LocalDate
+    today: LocalDate,
+    periods: List<id.ac.binus.bloomapp.data.network.PeriodRecord> = emptyList(),
 ): CalendarPhase {
+    if (periods.any { it.includes(date) }) return CalendarPhase.MENSTRUATION
     val daysFromToday = java.time.temporal.ChronoUnit.DAYS
         .between(today, date)
         .toInt()
