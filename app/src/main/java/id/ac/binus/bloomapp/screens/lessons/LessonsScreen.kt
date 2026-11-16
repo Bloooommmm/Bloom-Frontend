@@ -12,7 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Stop
@@ -20,6 +20,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -59,23 +60,30 @@ fun LessonsScreen(viewModel: LessonsViewModel = viewModel()) {
 
 @Composable
 private fun LessonCard(lesson: Lesson, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(20.dp)
-    Box(Modifier.fillMaxWidth().heightIn(min = 150.dp).background(Color(0xFFDC4862), shape)) {
-        Surface(Modifier.fillMaxWidth().offset(y = (-4).dp).clickable(onClick = onClick), shape = shape, color = Color.White, border = BorderStroke(1.dp, Primary)) {
-            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Image(painterResource(lessonIllustrations(lesson).firstOrNull() ?: R.drawable.article_mood_1), "", Modifier.size(96.dp), contentScale = ContentScale.Fit)
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.MenuBook, contentDescription = null, tint = Primary, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("${lesson.estimatedReadTime} min", color = TextSecondary, style = MaterialTheme.typography.labelMedium)
-                        Spacer(Modifier.weight(1f))
-                        Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = "Read article", tint = Primary)
-                    }
-                    Text(lesson.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.padding(top = 8.dp), maxLines = 3)
-                    Text(articlePreview(lesson.content), maxLines = 2, color = TextSecondary, modifier = Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodySmall)
+    val shape = RoundedCornerShape(18.dp)
+    Surface(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        shape = shape,
+        color = Color.White,
+        border = BorderStroke(1.dp, Outline.copy(alpha = 0.65f))
+    ) {
+        Column {
+            Image(
+                painter = painterResource(lessonIllustrations(lesson).firstOrNull() ?: R.drawable.article_mood_1),
+                contentDescription = null,
+                modifier = Modifier.fillMaxWidth().height(148.dp).clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp)),
+                contentScale = ContentScale.Crop
+            )
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = Primary, modifier = Modifier.size(17.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("${lesson.estimatedReadTime} min read", color = TextSecondary, style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.weight(1f))
+                    Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = "Read article", tint = Primary)
                 }
+                Text(lesson.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 2)
+                Text(articlePreview(lesson.content), maxLines = 2, color = TextSecondary, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
