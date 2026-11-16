@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -73,21 +74,10 @@ fun ProfileScreen(onSignedOut: () -> Unit) {
                 }
             }
         }
-        Text("Account", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
-        Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), color = Color.Transparent, border = androidx.compose.foundation.BorderStroke(1.dp, Outline)) {
-            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.Person, contentDescription = null, tint = Primary)
-                Spacer(Modifier.size(12.dp))
-                Column {
-                    Text("Signed in with Google", color = TextPrimary, fontWeight = FontWeight.SemiBold)
-                    Text("Your profile is synced with Firebase", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
         Spacer(Modifier.height(4.dp))
         Button(
             onClick = { FirebaseAuth.getInstance().signOut(); onSignedOut() },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
+            modifier = Modifier.fillMaxWidth().height(52.dp).shadow(8.dp, RoundedCornerShape(16.dp)),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Primary)
         ) {
