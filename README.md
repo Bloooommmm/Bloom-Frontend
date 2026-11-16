@@ -1,11 +1,5 @@
 # Bloom Mobile
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Bloooommmm/.github/main/profile/assets/bloom-logo.svg" alt="Bloom" width="220">
-  <br>
-  <img src="app/src/main/res/drawable/bloom_launcher_pose.png" alt="Bloom's pink sprout mascot" width="120">
-</p>
-
 Bloom is a calm Android period tracker for young teens: track a period, understand cycle patterns, and learn with supportive illustrated lessons.
 
 [Download APK](https://github.com/Bloooommmm/Bloom-Frontend/releases/latest) | [Backend](https://github.com/Bloooommmm/Bloom-Backend) | [Organization](https://github.com/Bloooommmm)

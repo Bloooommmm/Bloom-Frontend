@@ -36,6 +36,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 
 @Composable
 fun LoginScreen(
@@ -46,9 +48,10 @@ fun LoginScreen(
     var signingIn by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     var loginError by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode != Activity.RESULT_OK) return@rememberLauncherForActivityResult
+        signingIn = false
+        if (result.resultCode == Activity.RESULT_CANCELED && result.data == null) return@rememberLauncherForActivityResult
         runCatching {
-            val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).result
+            val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).getResult(ApiException::class.java)
             val credential = GoogleAuthProvider.getCredential(account.idToken, null)
             signingIn = true
             loginError = null
@@ -73,9 +76,10 @@ fun LoginScreen(
                     }
                 }
             }
-        }.onFailure {
+        }.onFailure { error ->
             signingIn = false
-            loginError = "Google sign-in was cancelled."
+            loginError = if ((error as? ApiException)?.statusCode == GoogleSignInStatusCodes.SIGN_IN_CANCELLED) null
+                else "Couldn't sign in. Check your connection and try again."
         }
     }
     Column(
@@ -142,6 +146,7 @@ fun LoginScreen(
                         .requestIdToken(context.getString(id.ac.binus.bloomapp.R.string.default_web_client_id))
                         .requestEmail()
                         .build()
+                    loginError = null
                     launcher.launch(GoogleSignIn.getClient(context, options).signInIntent)
                 },
                 enabled = !signingIn,
