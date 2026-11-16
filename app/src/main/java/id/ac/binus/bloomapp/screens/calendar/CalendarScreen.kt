@@ -27,7 +27,7 @@ import java.time.format.TextStyle
 import java.util.Locale
 import id.ac.binus.bloomapp.presentation.tracking.TrackingViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.material3.Button
+import id.ac.binus.bloomapp.ui.components.CustomButton
 
 private enum class CalendarPhase {
     MENSTRUATION,
@@ -284,11 +284,12 @@ fun CalendarScreen(
                 color = getCalendarPhaseDarkColor(selectedPhase),
                 fontWeight = FontWeight.SemiBold,
             )
-            Button(
+            CustomButton(
+                text = if (activePeriod == null) "Catat mulai period" else "Catat selesai period",
                 onClick = { if (activePeriod == null) tracking.start(selectedDate) else tracking.finish(activePeriod.id, selectedDate) },
                 enabled = !trackingState.saving,
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text(if (activePeriod == null) "Catat mulai period" else "Catat selesai period") }
+            )
         }
     }
 }

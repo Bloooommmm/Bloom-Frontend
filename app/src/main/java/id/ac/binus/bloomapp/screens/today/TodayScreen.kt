@@ -25,10 +25,9 @@ import java.time.format.TextStyle
 import java.util.Locale
 import id.ac.binus.bloomapp.presentation.tracking.TrackingViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.material3.Button
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import id.ac.binus.bloomapp.ui.components.CustomButton
 
 @Composable
 fun TodayScreen(tracking: TrackingViewModel) {
@@ -43,16 +42,15 @@ fun TodayScreen(tracking: TrackingViewModel) {
     val activePeriod = trackingState.periods.firstOrNull { it.endDate == null }
     val selectedPeriod = trackingState.periods.firstOrNull { it.includes(selectedDate) }
 
-    // Temporary preview data
-    // Will be replaced by actual cycle calculations later.
-    val dateItems = remember(today, trackingState.periods) {
+    val latestPeriodStart = trackingState.periods.maxByOrNull { it.startDate }?.startDate
+    val dateItems = remember(today, trackingState.periods, latestPeriodStart) {
         (-14..16).map { offset ->
-
-            // Preview: today is Day 8 of a 28-day cycle.
-            val cycleDay = ((7 + offset) % 28 + 28) % 28 + 1
+            val date = today.plusDays(offset.toLong())
+            val cycleDay = latestPeriodStart?.let { Math.floorMod(java.time.temporal.ChronoUnit.DAYS.between(it, date).toInt(), 28) + 1 } ?: 1
 
             val phase = when {
-                trackingState.periods.any { it.includes(today.plusDays(offset.toLong())) } -> CyclePhase.MENSTRUATION
+                trackingState.periods.any { it.includes(date) } -> CyclePhase.MENSTRUATION
+                latestPeriodStart == null -> CyclePhase.FOLLICULAR
                 cycleDay in 1..5 -> CyclePhase.MENSTRUATION
                 cycleDay in 6..13 -> CyclePhase.FOLLICULAR
                 cycleDay == 14 -> CyclePhase.OVULATION
@@ -60,7 +58,7 @@ fun TodayScreen(tracking: TrackingViewModel) {
             }
 
             CycleDateItem(
-                date = today.plusDays(offset.toLong()),
+                date = date,
                 phase = phase
             )
         }
@@ -72,10 +70,9 @@ fun TodayScreen(tracking: TrackingViewModel) {
     ) + " " + today.dayOfMonth
 
 
-    val selectedCycleDay = (
-            (7 + java.time.temporal.ChronoUnit.DAYS
-                .between(today, selectedDate).toInt()) % 28 + 28
-            ) % 28 + 1
+    val selectedCycleDay = latestPeriodStart?.let {
+        Math.floorMod(java.time.temporal.ChronoUnit.DAYS.between(it, selectedDate).toInt(), 28) + 1
+    } ?: 1
 
     val selectedPhase = dateItems
         .firstOrNull { it.date == selectedDate }
@@ -131,7 +128,7 @@ fun TodayScreen(tracking: TrackingViewModel) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             ) {
                 CycleProgressRing(
                     cycleDay = selectedCycleDay,
@@ -147,15 +144,17 @@ fun TodayScreen(tracking: TrackingViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
-            Button(
+            CustomButton(
+                text = if (activePeriod == null) "Catat mulai haid" else "Catat selesai haid",
                 onClick = { if (activePeriod == null) tracking.start(selectedDate) else tracking.finish(activePeriod.id, selectedDate) },
                 enabled = !trackingState.saving,
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text(if (activePeriod == null) "Catat mulai haid" else "Catat selesai haid") }
+            )
             trackingState.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         }
     }
 }
+
 
 
 

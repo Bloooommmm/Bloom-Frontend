@@ -68,7 +68,10 @@ fun LessonsScreen(viewModel: LessonsViewModel = viewModel()) {
                     })
                 }
             paragraphs.forEachIndexed { index, paragraph ->
-                if (index > 0 && index % 2 == 0) Image(painterResource(lessonIllustration(lesson)), "Bloom mascot article illustration", Modifier.fillMaxWidth().height(150.dp), contentScale=ContentScale.Fit)
+                if (index > 0 && index % 2 == 0) {
+                    val illustrations = lessonIllustrations(lesson)
+                    Image(painterResource(illustrations[(index / 2 - 1).mod(illustrations.size)]), "Bloom mascot article illustration", Modifier.fillMaxWidth().height(150.dp).background(Color.White), contentScale=ContentScale.Fit)
+                }
                 Text(paragraph, style=MaterialTheme.typography.bodyLarge, color=TextPrimary)
             }
         }
@@ -81,6 +84,15 @@ private fun lessonIllustration(lesson: Lesson): Int = when {
     lesson.title.contains("Crave", ignoreCase = true) -> R.drawable.learn_cravings
     lesson.title.contains("Fatigue", ignoreCase = true) -> R.drawable.learn_fatigue
     else -> R.drawable.learn_mascot_hero
+}
+
+private fun lessonIllustrations(lesson: Lesson): List<Int> = when {
+    lesson.title.contains("Mood", ignoreCase = true) -> listOf(R.drawable.learn_mood, R.drawable.learn_phases, R.drawable.learn_selfcare)
+    lesson.title.contains("Cramps", ignoreCase = true) -> listOf(R.drawable.learn_cramps, R.drawable.learn_selfcare, R.drawable.learn_phases)
+    lesson.title.contains("Crave", ignoreCase = true) -> listOf(R.drawable.learn_cravings, R.drawable.learn_selfcare, R.drawable.learn_phases)
+    lesson.title.contains("Fatigue", ignoreCase = true) -> listOf(R.drawable.learn_fatigue, R.drawable.learn_selfcare, R.drawable.learn_phases)
+    lesson.title.contains("First Period", ignoreCase = true) -> listOf(R.drawable.learn_period_kit, R.drawable.learn_phases, R.drawable.learn_selfcare)
+    else -> listOf(R.drawable.learn_mascot_hero, R.drawable.learn_phases, R.drawable.learn_selfcare)
 }
 
 
