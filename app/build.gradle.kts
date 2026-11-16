@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "id.ac.binus.bloomapp"
-    compileSdk = 37
+    compileSdk = providers.gradleProperty("ciCompileSdk").orNull?.toInt() ?: 37
 
     defaultConfig {
         applicationId = "id.ac.binus.bloomapp"

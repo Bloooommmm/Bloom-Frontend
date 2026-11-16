@@ -26,7 +26,7 @@ Bloom is a calm Android period tracker for young teens: track a period, understa
 - Android Gradle Plugin 9.2.1
 - Gradle 9.4.1
 - Minimum SDK 27, target SDK 36
-- Compile SDK 37, JDK 21
+- Compile SDK 37 locally, SDK 36 in CI (via `-PciCompileSdk=36`), JDK 21
 - Firebase Authentication
 
 The app uses `https://bloom-be.yanzz.dev` as its production API base URL.

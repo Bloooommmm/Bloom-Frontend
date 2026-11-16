@@ -30,7 +30,7 @@ jobs:
           packages: platform-tools
       - name: Install Android SDK packages
         shell: bash
-        run: sdkmanager "platform-tools" "platforms;android-37"
+        run: sdkmanager "platform-tools" "platforms;android-36"
       - name: Restore Firebase Android config
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
@@ -49,9 +49,9 @@ jobs:
             exit 1
           fi
       - name: Run tests
-        run: ./gradlew --no-daemon test
+        run: ./gradlew --no-daemon -PciCompileSdk=36 test
       - name: Build debug APK
-        run: ./gradlew --no-daemon :app:assembleDebug
+        run: ./gradlew --no-daemon -PciCompileSdk=36 :app:assembleDebug
       - name: Name debug APK
         shell: bash
         run: |
@@ -97,7 +97,7 @@ jobs:
           packages: platform-tools
       - name: Install Android SDK packages
         shell: bash
-        run: sdkmanager "platform-tools" "platforms;android-37"
+        run: sdkmanager "platform-tools" "platforms;android-36"
       - name: Restore Firebase Android config
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
@@ -121,7 +121,7 @@ jobs:
           printf '%s\n' "$actual_sha1" > android-sha1.txt
           echo "ANDROID_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
       - name: Build signed release APK
-        run: ./gradlew --no-daemon :app:assembleRelease
+        run: ./gradlew --no-daemon -PciCompileSdk=36 :app:assembleRelease
       - name: Stage release files
         shell: bash
         run: |
