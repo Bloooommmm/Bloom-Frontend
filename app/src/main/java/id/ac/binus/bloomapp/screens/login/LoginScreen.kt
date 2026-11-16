@@ -14,7 +14,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ButtonDefaults
@@ -22,7 +24,6 @@ import androidx.compose.foundation.BorderStroke
 import id.ac.binus.bloomapp.R
 import id.ac.binus.bloomapp.ui.theme.*
 import android.app.Activity
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
@@ -43,16 +44,18 @@ fun LoginScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var signingIn by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var loginError by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode != Activity.RESULT_OK) return@rememberLauncherForActivityResult
         runCatching {
             val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).result
             val credential = GoogleAuthProvider.getCredential(account.idToken, null)
             signingIn = true
+            loginError = null
             FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener { authTask ->
                 if (!authTask.isSuccessful) {
                     signingIn = false
-                    Toast.makeText(context, "Login gagal. Coba lagi.", Toast.LENGTH_SHORT).show()
+                    loginError = "Login gagal. Coba lagi."
                     return@addOnCompleteListener
                 }
 
@@ -64,7 +67,7 @@ fun LoginScreen(
                             ?: error("Missing Firebase token")
                         withTimeout(8_000) { BloomApi().syncCurrentUser(token) }
                     } catch (_: Exception) {
-                        Toast.makeText(context, "Login berhasil. Sinkronisasi backend tertunda.", Toast.LENGTH_LONG).show()
+                        // Backend sync retries on the next authenticated request.
                     } finally {
                         signingIn = false
                     }
@@ -72,7 +75,7 @@ fun LoginScreen(
             }
         }.onFailure {
             signingIn = false
-            Toast.makeText(context, "Login Google dibatalkan.", Toast.LENGTH_SHORT).show()
+            loginError = "Login Google dibatalkan."
         }
     }
     Column(
@@ -104,13 +107,16 @@ fun LoginScreen(
         // Headline & Subheadline
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = "Your new journey starts here.",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium.copy(fontSize = 18.sp),
                 color = TextPrimary,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                softWrap = false,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -167,14 +173,31 @@ fun LoginScreen(
                 )
             }
 
+            loginError?.let { message ->
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             // Disclaimer
-            Text(
-                text = "By continuing, you agree to our Terms of Service and Privacy Policy.",
-                style = MaterialTheme.typography.labelMedium,
-                color = TextSecondary,
-                textAlign = TextAlign.Center,
+            androidx.compose.foundation.text.BasicText(
+                text = androidx.compose.ui.text.AnnotatedString.Builder().apply {
+                    append("By continuing, you agree to our ")
+                    pushStyle(androidx.compose.ui.text.SpanStyle(textDecoration = TextDecoration.Underline))
+                    append("Terms of Service")
+                    pop()
+                    append(" and ")
+                    pushStyle(androidx.compose.ui.text.SpanStyle(textDecoration = TextDecoration.Underline))
+                    append("Privacy Policy")
+                    pop()
+                    append(".")
+                }.toAnnotatedString(),
+                style = MaterialTheme.typography.labelMedium.copy(color = TextSecondary, textAlign = TextAlign.Center),
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
