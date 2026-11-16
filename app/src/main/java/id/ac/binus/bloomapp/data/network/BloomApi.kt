@@ -17,6 +17,28 @@ data class Lesson(
 class BloomApi(
     private val baseUrl: String = BuildConfig.BLOOM_API_BASE_URL,
 ) {
+    suspend fun getPeriods(idToken: String): String = authenticatedGet("/api/tracking/periods", idToken)
+
+    suspend fun getMoods(idToken: String): String = authenticatedGet("/api/tracking/moods", idToken)
+
+    suspend fun recordPeriod(idToken: String, startDate: String, endDate: String? = null): String = authenticatedJson("/api/tracking/periods", idToken, "POST", "{\"startDate\":\"$startDate\"${endDate?.let { ",\"endDate\":\"$it\"" } ?: ""}}")
+
+    suspend fun recordMood(idToken: String, mood: String, loggedAt: String, note: String? = null): String = authenticatedJson("/api/tracking/moods", idToken, "PUT", "{\"mood\":\"${mood.replace("\\", "\\\\").replace("\"", "\\\"")}\",\"loggedAt\":\"$loggedAt\"${note?.let { ",\"note\":\"${it.replace("\\", "\\\\").replace("\"", "\\\"")}" } ?: ""}}")
+
+    private suspend fun authenticatedGet(path: String, idToken: String): String = authenticatedJson(path, idToken, "GET")
+
+    private suspend fun authenticatedJson(path: String, idToken: String, method: String, body: String? = null): String = withContext(Dispatchers.IO) {
+        val connection = (URL("${baseUrl.trimEnd('/')}$path").openConnection() as HttpURLConnection).apply {
+            requestMethod = method
+            connectTimeout = 10_000
+            readTimeout = 10_000
+            setRequestProperty("Authorization", "Bearer $idToken")
+            setRequestProperty("Accept", "application/json")
+            if (body != null) { doOutput = true; setRequestProperty("Content-Type", "application/json"); outputStream.use { it.write(body.toByteArray()) } }
+        }
+        try { if (connection.responseCode !in 200..299) throw BloomApiException("Backend returned HTTP ${connection.responseCode}"); connection.inputStream.bufferedReader().use { it.readText() } } finally { connection.disconnect() }
+    }
+
     suspend fun syncCurrentUser(idToken: String): Unit = withContext(Dispatchers.IO) {
         val connection = (URL("${baseUrl.trimEnd('/')}/api/users/me").openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
