@@ -18,6 +18,7 @@ import id.ac.binus.bloomapp.screens.auth.LoginScreen
 import id.ac.binus.bloomapp.screens.onboarding.OnboardingScreen
 import id.ac.binus.bloomapp.screens.today.TodayScreen
 import id.ac.binus.bloomapp.screens.lessons.LessonsScreen
+import id.ac.binus.bloomapp.screens.profile.ProfileScreen
 import id.ac.binus.bloomapp.ui.components.BloomBottomNavigationBar
 import id.ac.binus.bloomapp.ui.screens.calendar.CalendarScreen
 import id.ac.binus.bloomapp.ui.theme.Surface
@@ -102,7 +103,11 @@ fun AppNavigation() {
             }
 
             composable("profile") {
-                PlaceholderScreen("Profile")
+                ProfileScreen(onSignedOut = {
+                    navController.navigate("login") {
+                        popUpTo("today") { inclusive = true }
+                    }
+                })
             }
         }
     }
