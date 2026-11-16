@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -129,7 +131,7 @@ fun TodayScreen(tracking: TrackingViewModel) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
             ) {
                 CycleProgressRing(
                     cycleDay = selectedCycleDay,
@@ -154,3 +156,7 @@ fun TodayScreen(tracking: TrackingViewModel) {
         }
     }
 }
+
+
+
+
