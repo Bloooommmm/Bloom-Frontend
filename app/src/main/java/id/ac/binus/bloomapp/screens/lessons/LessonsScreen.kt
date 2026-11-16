@@ -7,12 +7,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.DisposableEffect
+import android.speech.tts.TextToSpeech
+import java.util.Locale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +52,33 @@ fun LessonsScreen(viewModel: LessonsViewModel = viewModel()) {
     }
 }
 @Composable private fun LessonCard(lesson: Lesson,onClick:()->Unit){ Card(Modifier.fillMaxWidth().clickable(onClick=onClick),RoundedCornerShape(20.dp),colors=CardDefaults.cardColors(Color.White),elevation=CardDefaults.cardElevation(0.dp),border=BorderStroke(1.dp,Outline)){ Column(Modifier.padding(16.dp)){ Row(verticalAlignment=Alignment.CenterVertically){Icon(imageVector = Icons.Outlined.MenuBook, contentDescription = null, tint = Primary, modifier = Modifier.size(20.dp));Text("  ${lesson.estimatedReadTime} min read",color=TextSecondary,style=MaterialTheme.typography.labelMedium);Spacer(Modifier.weight(1f));Icon(imageVector = Icons.Outlined.ArrowForward, contentDescription = "Read article", tint = Primary)}; Text(lesson.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=TextPrimary,modifier=Modifier.padding(top=10.dp));Text(lesson.content,maxLines=3,color=TextSecondary,modifier=Modifier.padding(top=6.dp)) } } }
-@Composable private fun LessonDetail(lesson:Lesson,onBack:()->Unit){ Column(Modifier.fillMaxSize().background(Surface).padding(20.dp)){Text("←  Learn",color=Primary,modifier=Modifier.clickable(onClick=onBack));Image(painterResource(lessonIllustration(lesson)),"Bloom mascot illustration",Modifier.fillMaxWidth().height(190.dp).padding(vertical=12.dp),contentScale=ContentScale.Fit);Text(lesson.title,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,color=TextPrimary);Text("${lesson.estimatedReadTime} min read",color=TextSecondary,modifier=Modifier.padding(top=6.dp));Text(lesson.content,style=MaterialTheme.typography.bodyLarge,color=TextPrimary,modifier=Modifier.padding(top=18.dp))} }
+@Composable private fun LessonDetail(lesson:Lesson,onBack:()->Unit){
+    val paragraphs = remember(lesson.content) { lesson.content.split(Regex("\\n+|(?<=[.!?])\\s+(?=[A-Z])")).filter { it.isNotBlank() } }
+    var speaking by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val tts = remember { TextToSpeech(context) { } }
+    DisposableEffect(Unit) { onDispose { tts.stop(); tts.shutdown() } }
+    Column(Modifier.fillMaxSize().background(Surface).padding(horizontal=20.dp, vertical=16.dp)) {
+        Text("←  Learn", color=Primary, modifier=Modifier.clickable(onClick=onBack))
+        LazyColumn(verticalArrangement=Arrangement.spacedBy(16.dp), contentPadding=PaddingValues(bottom=24.dp)) {
+            item {
+                Image(painterResource(lessonIllustration(lesson)), "Bloom mascot illustration", Modifier.fillMaxWidth().height(190.dp).padding(vertical=12.dp), contentScale=ContentScale.Fit)
+                Text(lesson.title, style=MaterialTheme.typography.headlineSmall, fontWeight=FontWeight.Bold, color=TextPrimary)
+                Row(Modifier.fillMaxWidth().padding(top=6.dp), verticalAlignment=Alignment.CenterVertically) {
+                    Text("${lesson.estimatedReadTime} min read", color=TextSecondary)
+                    Spacer(Modifier.weight(1f))
+                    Text(if (speaking) "Stop audio" else "Listen", color=Primary, fontWeight=FontWeight.Bold, modifier=Modifier.clickable {
+                        if (speaking) { tts.stop(); speaking = false } else { tts.language = Locale("en"); tts.speak(lesson.content, TextToSpeech.QUEUE_FLUSH, null, "bloom-${lesson.id}"); speaking = true }
+                    })
+                }
+            }
+            itemsIndexed(paragraphs) { index, paragraph ->
+                if (index > 0 && index % 2 == 0) Image(painterResource(lessonIllustration(lesson)), "Bloom mascot article illustration", Modifier.fillMaxWidth().height(150.dp), contentScale=ContentScale.Fit)
+                Text(paragraph, style=MaterialTheme.typography.bodyLarge, color=TextPrimary)
+            }
+        }
+    }
+}
 
 private fun lessonIllustration(lesson: Lesson): Int = when {
     lesson.title.contains("Mood", ignoreCase = true) -> R.drawable.learn_mood
