@@ -20,6 +20,20 @@ android {
 
     buildTypes {
         release {
+            val ciKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+            val ciStorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            val ciKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
+            val ciKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+
+            if (!ciKeystorePath.isNullOrBlank() && !ciStorePassword.isNullOrBlank() && !ciKeyAlias.isNullOrBlank() && !ciKeyPassword.isNullOrBlank()) {
+                signingConfig = signingConfigs.create("ciRelease") {
+                    storeFile = file(ciKeystorePath)
+                    storePassword = ciStorePassword
+                    keyAlias = ciKeyAlias
+                    keyPassword = ciKeyPassword
+                }
+            }
+
             optimization {
                 enable = false
             }
