@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,6 +28,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.tasks.await
 import id.ac.binus.bloomapp.data.network.BloomApi
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -38,26 +42,38 @@ fun LoginScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var signingIn by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode != Activity.RESULT_OK) return@rememberLauncherForActivityResult
         runCatching {
             val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).result
             val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+            signingIn = true
             FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener { authTask ->
-                if (authTask.isSuccessful) {
-                    FirebaseAuth.getInstance().currentUser?.getIdToken(false)?.addOnSuccessListener { token ->
-                        scope.launch {
-                            try {
-                                BloomApi().syncCurrentUser(token.token ?: error("Missing Firebase token"))
-                                onGoogleSignInClick()
-                            } catch (_: Exception) {
-                                Toast.makeText(context, "Gagal terhubung ke backend. Coba lagi.", Toast.LENGTH_LONG).show()
-                            }
-                        }
+                if (!authTask.isSuccessful) {
+                    signingIn = false
+                    Toast.makeText(context, "Login gagal. Coba lagi.", Toast.LENGTH_SHORT).show()
+                    return@addOnCompleteListener
+                }
+
+                // Home should not wait for a backend round-trip; profile sync recovers in background.
+                onGoogleSignInClick()
+                scope.launch {
+                    try {
+                        val token = FirebaseAuth.getInstance().currentUser?.getIdToken(false)?.await()?.token
+                            ?: error("Missing Firebase token")
+                        withTimeout(8_000) { BloomApi().syncCurrentUser(token) }
+                    } catch (_: Exception) {
+                        Toast.makeText(context, "Login berhasil. Sinkronisasi backend tertunda.", Toast.LENGTH_LONG).show()
+                    } finally {
+                        signingIn = false
                     }
-                } else Toast.makeText(context, "Login gagal. Coba lagi.", Toast.LENGTH_SHORT).show()
+                }
             }
-        }.onFailure { Toast.makeText(context, "Login Google dibatalkan.", Toast.LENGTH_SHORT).show() }
+        }.onFailure {
+            signingIn = false
+            Toast.makeText(context, "Login Google dibatalkan.", Toast.LENGTH_SHORT).show()
+        }
     }
     Column(
         modifier = Modifier
@@ -122,6 +138,7 @@ fun LoginScreen(
                         .build()
                     launcher.launch(GoogleSignIn.getClient(context, options).signInIntent)
                 },
+                enabled = !signingIn,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -144,7 +161,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Text(
-                    text = "Continue with Google",
+                    text = if (signingIn) "Signing in..." else "Continue with Google",
                     style = MaterialTheme.typography.titleMedium,
                     color = Color(0xFF53575B)
                 )

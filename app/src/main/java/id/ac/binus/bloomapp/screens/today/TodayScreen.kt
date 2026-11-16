@@ -2,6 +2,7 @@
 package id.ac.binus.bloomapp.screens.today
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
+import id.ac.binus.bloomapp.R
 import id.ac.binus.bloomapp.ui.components.CycleDateItem
 import id.ac.binus.bloomapp.ui.components.CycleDateSelector
 import id.ac.binus.bloomapp.ui.components.CyclePhase
@@ -94,14 +97,21 @@ fun TodayScreen(tracking: TrackingViewModel) {
         ) {
 
             // Header
-            Text(
-                text = "Today, $formattedDate",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
+            Box(Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Today, $formattedDate",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+                Image(
+                    painter = painterResource(R.drawable.bloom_mascot_today),
+                    contentDescription = "Bloom mascot",
+                    modifier = Modifier.size(58.dp).align(Alignment.CenterEnd)
+                )
+            }
 
             // Cycle Date Selector
             CycleDateSelector(
