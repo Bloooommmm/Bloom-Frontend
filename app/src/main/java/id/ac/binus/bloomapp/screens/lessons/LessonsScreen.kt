@@ -39,7 +39,7 @@ fun LessonsScreen(viewModel: LessonsViewModel = viewModel()) {
         Spacer(Modifier.height(18.dp))
         Card(shape=RoundedCornerShape(24.dp), colors=CardDefaults.cardColors(containerColor=PrimaryLight), elevation=CardDefaults.cardElevation(0.dp), border=BorderStroke(1.dp,Outline)) {
             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment=Alignment.CenterVertically) {
-                Image(painterResource(R.drawable.bg_onboarding_illustration), "Bloom mascot", Modifier.size(92.dp).clip(RoundedCornerShape(18.dp)), contentScale=ContentScale.Crop)
+                Image(painterResource(R.drawable.learn_mascot_hero), "Bloom mascot", Modifier.size(92.dp).clip(RoundedCornerShape(18.dp)), contentScale=ContentScale.Crop)
                 Column(Modifier.padding(start=14.dp)){ Text("You’ve got this", style=MaterialTheme.typography.titleMedium, fontWeight=FontWeight.Bold, color=TextPrimary); Text("Learn what your body is telling you.", color=TextSecondary, style=MaterialTheme.typography.bodySmall) }
             }
         }
@@ -48,6 +48,7 @@ fun LessonsScreen(viewModel: LessonsViewModel = viewModel()) {
     }
 }
 @Composable private fun LessonCard(lesson: Lesson,onClick:()->Unit){ Card(Modifier.fillMaxWidth().clickable(onClick=onClick),RoundedCornerShape(20.dp),colors=CardDefaults.cardColors(Color.White),elevation=CardDefaults.cardElevation(0.dp),border=BorderStroke(1.dp,Outline)){ Column(Modifier.padding(16.dp)){ Row(verticalAlignment=Alignment.CenterVertically){Icon(imageVector = Icons.Outlined.MenuBook, contentDescription = null, tint = Primary, modifier = Modifier.size(20.dp));Text("  ${lesson.estimatedReadTime} min read",color=TextSecondary,style=MaterialTheme.typography.labelMedium);Spacer(Modifier.weight(1f));Icon(imageVector = Icons.Outlined.ArrowForward, contentDescription = "Read article", tint = Primary)}; Text(lesson.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=TextPrimary,modifier=Modifier.padding(top=10.dp));Text(lesson.content,maxLines=3,color=TextSecondary,modifier=Modifier.padding(top=6.dp)) } } }
-@Composable private fun LessonDetail(lesson:Lesson,onBack:()->Unit){ Column(Modifier.fillMaxSize().background(Surface).padding(20.dp)){Text("←  Learn",color=Primary,modifier=Modifier.clickable(onClick=onBack));Image(painterResource(R.drawable.login_illustration),"Bloom mascot illustration",Modifier.fillMaxWidth().height(190.dp).padding(vertical=12.dp),contentScale=ContentScale.Fit);Text(lesson.title,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,color=TextPrimary);Text("${lesson.estimatedReadTime} min read",color=TextSecondary,modifier=Modifier.padding(top=6.dp));Text(lesson.content,style=MaterialTheme.typography.bodyLarge,color=TextPrimary,modifier=Modifier.padding(top=18.dp))} }
+@Composable private fun LessonDetail(lesson:Lesson,onBack:()->Unit){ Column(Modifier.fillMaxSize().background(Surface).padding(20.dp)){Text("←  Learn",color=Primary,modifier=Modifier.clickable(onClick=onBack));Image(painterResource(R.drawable.learn_mascot_hero),"Bloom mascot illustration",Modifier.fillMaxWidth().height(190.dp).padding(vertical=12.dp),contentScale=ContentScale.Fit);Text(lesson.title,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,color=TextPrimary);Text("${lesson.estimatedReadTime} min read",color=TextSecondary,modifier=Modifier.padding(top=6.dp));Text(lesson.content,style=MaterialTheme.typography.bodyLarge,color=TextPrimary,modifier=Modifier.padding(top=18.dp))} }
+
 
 
